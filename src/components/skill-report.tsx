@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, CheckCircle2, Globe, GraduationCap, LinkIcon, Youtube } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Globe, GraduationCap, Youtube } from "lucide-react";
 import React from "react";
 
 interface SkillReportProps {
@@ -89,30 +89,50 @@ export function SkillReport({ result }: SkillReportProps) {
           <CardContent>
             {top5MissingSkills.length > 0 ? (
               <div className="space-y-4">
-                {top5MissingSkills.map((skill) => {
+                {top5MissingSkills.map((skill, skillIndex) => {
                   const suggestion = resourceMap.get(skill.toLowerCase());
-                  const hasResources = suggestion && (suggestion.websites.length > 0 || suggestion.youtubeChannels.length > 0);
+                  const hasWebsites = suggestion && suggestion.websites.length > 0;
+                  const hasYouTube = suggestion && suggestion.youtubeChannels.length > 0;
 
                   return (
-                    <div key={skill}>
+                    <React.Fragment key={skill}>
+                      {skillIndex > 0 && <Separator className="my-4" />}
                       <p className="font-semibold text-base">{skill}</p>
-                      {hasResources && (
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                           {[...(suggestion.websites || []), ...(suggestion.youtubeChannels || [])].map((link, index) => (
+                      <div className="space-y-2 mt-1">
+                        {hasWebsites && (
+                          <div className="space-y-1">
+                            {suggestion.websites.map((link, index) => (
                               <a
-                                key={index}
+                                key={`web-${index}`}
                                 href={link.startsWith('http') ? link : `https://${link}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                                className="text-sm text-primary hover:underline flex items-center gap-2"
                               >
-                                <LinkIcon className="w-3 h-3"/>
-                                {link.replace(/^(https?:\/\/)?(www\.)?/, '')}
+                                <Globe className="w-4 h-4 text-sky-500"/>
+                                <span className="truncate">{link.replace(/^(https?:\/\/)?(www\.)?/, '')}</span>
                               </a>
                             ))}
-                        </div>
-                      )}
-                    </div>
+                          </div>
+                        )}
+                        {hasYouTube && (
+                          <div className="space-y-1">
+                             {suggestion.youtubeChannels.map((link, index) => (
+                               <a
+                                key={`yt-${index}`}
+                                href={link.startsWith('http') ? link : `https://www.youtube.com/c/${link}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary hover:underline flex items-center gap-2"
+                              >
+                                <Youtube className="w-4 h-4 text-red-500"/>
+                                <span className="truncate">{link.replace(/^(https?:\/\/)?(www\.)?/, '')}</span>
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </React.Fragment>
                   );
                 })}
               </div>
@@ -122,6 +142,33 @@ export function SkillReport({ result }: SkillReportProps) {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="all-skills">
+            <AccordionTrigger className="px-6 font-headline text-lg">
+              View Full Skill List ({jobSkills.length} skills)
+            </AccordionTrigger>
+            <AccordionContent className="px-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-2">
+                {jobSkills.map((skill) => {
+                  const isMatched = matchedSkills.some(s => s.toLowerCase() === skill.toLowerCase());
+                  return (
+                    <div key={skill} className="flex items-center gap-2">
+                      {isMatched ? (
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      )}
+                      <span className={isMatched ? 'text-muted-foreground' : 'text-foreground'}>{skill}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </Card>
     </div>
   );
 }
