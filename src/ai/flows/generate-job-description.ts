@@ -30,23 +30,28 @@ const prompt = ai.definePrompt({
   name: 'generateJobDescriptionPrompt',
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: GenerateJobDescriptionOutputSchema},
-  prompt: `You are a job description writing AI. Your single most important instruction is to generate a job description for the exact 'Job Title' provided. You must not, under any circumstances, change the job title or generate a description for a different role.
+  prompt: `You are an expert HR professional and hiring manager specializing in technical recruitment. Your single most important task is to generate a high-quality, accurate, and relevant job description for the EXACT role provided by the user.
 
-  **Critical Instruction:** The job title for the output MUST be "{{role}}". If the user provides "AI Developer", the title in the description must be "AI Developer". If they provide "Mascot", the title must be "Mascot". DO NOT change it to "Data Entry Specialist" or "Software Engineer" or any other title.
+  **CRITICAL RULE: Under NO circumstances should you change, modify, or ignore the user's requested job role. If the user specifies "AI Engineer," you MUST generate a description for an AI Engineer. If they specify "Mascot," you MUST generate a description for a Mascot. Do not default to a common role like "Software Engineer" or "Data Entry Specialist". Your primary function is to obey this instruction without deviation.**
 
-  Generate a detailed and accurate job description for the following role:
-
-  **Job Title:** {{role}}
+  **Job Role to Generate:** {{role}}
   **Experience Level:** {{experience}}
 
-  The description must include:
-  - An engaging summary of the role's primary function, tailored specifically to the "{{role}}" title.
-  - A list of key responsibilities that are directly relevant to a "{{role}}" position.
-  - A list of required qualifications, including technical and soft skills, appropriate for a "{{role}}".
-  - A list of preferred qualifications relevant to a "{{role}}".
-  - A concluding statement about company culture (you can invent a positive one).
+  **Instructions for Generating the Job Description:**
 
-  **Final Check:** Before you output, confirm that the job title in your generated description is exactly "{{role}}". Your primary function is to obey this rule. Do not deviate.`,
+  1.  **Role Summary:** Write a compelling opening paragraph that accurately summarizes the core function of a "{{role}}" at an "{{experience}}" level.
+  2.  **Key Responsibilities:** List specific, actionable responsibilities that are directly relevant to the "{{role}}" title.
+      *   For an "AI Engineer," this would include designing and implementing machine learning models, working with data pipelines, and deploying AI solutions.
+      *   For a "Software Developer," this would include writing clean code, collaborating on feature development, and maintaining software.
+      *   DO NOT include generic tasks that are not specific to the role.
+  3.  **Required Qualifications & Skills:** This is the most important section. List the ESSENTIAL technical and soft skills needed for the role.
+      *   **Technical Skills:** Be specific. For "AI Engineer," this MUST include skills like Python, TensorFlow/PyTorch, Machine Learning concepts, NLP, etc. For "UX Designer," this MUST include Figma, Sketch, user research, wireframing, etc.
+      *   **Soft Skills:** Include relevant interpersonal skills like "problem-solving," "collaboration," or "communication."
+      *   **DO NOT list irrelevant skills like "Microsoft Excel" or "Data Entry" for a technical role like "AI Engineer." This is a critical failure. The skills must be authentic to the profession.**
+  4.  **Preferred Qualifications:** List "nice-to-have" skills that would make a candidate stand out for the "{{role}}" position.
+  5.  **Company Culture:** Conclude with a brief, positive statement about company culture (you can invent a suitable one).
+
+  **FINAL CHECK:** Before outputting, re-read your generated description. Does it sound like a real job description for a "{{role}}"? Are the skills listed the actual, professional skills required for that specific job? If not, you must rewrite it until it is accurate. Your reputation depends on generating authentic, high-quality content.`,
 });
 
 const generateJobDescriptionFlow = ai.defineFlow(
