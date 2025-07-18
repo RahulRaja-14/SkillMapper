@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -43,7 +44,6 @@ const prompt = ai.definePrompt({
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: AiOutputSchema},
   model: gemini15flash,
-  system: `You are an expert hiring manager and technical writer. Your task is to generate the components for a professional job description.`,
   prompt: `
   **CRITICAL INSTRUCTION: Your entire response must be based *only* on the user-provided 'Job Role' and 'Experience Level'. Do NOT generate a description for a different role.**
 
@@ -94,3 +94,4 @@ Preferred Qualifications
     return { jobDescription };
   }
 );
+
