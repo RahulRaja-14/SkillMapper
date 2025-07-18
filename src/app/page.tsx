@@ -4,13 +4,12 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Loader2, Wand2, FileUp, FileText } from "lucide-react";
+import { Loader2, Wand2, FileUp, FileText, Briefcase, Paperclip } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,13 +22,14 @@ import { extractJobSkills } from "@/ai/flows/extract-job-skills";
 import { extractResumeSkills } from "@/ai/flows/extract-resume-skills";
 import { suggestResources, type SuggestResourcesOutput } from "@/ai/flows/suggest-resources";
 import { SkillReport } from "@/components/skill-report";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
 
 const formSchema = z.object({
   resumeFile: z
-    .instanceof(File)
+    .instanceof(File, { message: "Please upload your resume." })
     .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine(
       (file) => ACCEPTED_FILE_TYPES.includes(file.type),
@@ -116,113 +116,131 @@ export default function SkillMapperPage() {
   const selectedFile = form.watch("resumeFile");
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-secondary/40 dark:bg-secondary/20">
       <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
-        <div className="max-w-4xl mx-auto">
-          <header className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">
-              SkillMapper
+        <div className="max-w-4xl mx-auto grid gap-12">
+          <header className="text-center space-y-2">
+            <h1 className="text-4xl md:text-5xl font-bold font-headline tracking-tighter bg-gradient-to-br from-primary from-40% to-accent bg-clip-text text-transparent">
+              SkillMapper AI
             </h1>
-            <p className="mt-2 text-lg text-muted-foreground">
-              Bridge the gap between your resume and your dream job.
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Bridge the gap between your resume and your dream job. Upload your resume and paste a job description to get started.
             </p>
           </header>
+          
+          {!analysisResult && (
+            <Card className="shadow-lg animate-in fade-in-50 duration-500">
+              <CardContent className="p-6 md:p-8">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    <div className="grid md:grid-cols-2 gap-8 items-start">
+                      <FormField
+                        control={form.control}
+                        name="resumeFile"
+                        render={({ field }) => (
+                          <FormItem className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <Paperclip className="text-primary" />
+                              <FormLabel className="text-lg font-semibold">Your Resume</FormLabel>
+                            </div>
+                            <FormControl>
+                              <div className="relative">
+                                <Input 
+                                  type="file"
+                                  accept=".pdf"
+                                  className="hidden"
+                                  id="resume-upload"
+                                  {...resumeFileRef}
+                                  onChange={(e) => field.onChange(e.target.files?.[0])}
+                                />
+                                <label htmlFor="resume-upload" className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted/50 transition-colors">
+                                  {selectedFile ? (
+                                    <div className="text-center p-4">
+                                      <FileText className="mx-auto h-12 w-12 text-primary" />
+                                      <p className="mt-2 font-semibold text-foreground truncate">{selectedFile.name}</p>
+                                      <p className="text-xs text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                      <p className="mt-2 text-sm text-accent">Click or drag to change</p>
+                                    </div>
+                                  ) : (
+                                    <div className="text-center">
+                                      <FileUp className="mx-auto h-12 w-12 text-muted-foreground" />
+                                      <p className="mt-2 text-sm text-muted-foreground">
+                                        <span className="font-semibold text-accent">Click to upload</span> or drag & drop
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">PDF only, max 5MB</p>
+                                    </div>
+                                  )}
+                                </label>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="jobDescription"
+                        render={({ field }) => (
+                          <FormItem className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <Briefcase className="text-primary" />
+                              <FormLabel className="text-lg font-semibold">Job Description</FormLabel>
+                            </div>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Paste the full job description here..."
+                                className="h-64 resize-none"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="flex justify-center">
+                      <Button type="submit" size="lg" disabled={isLoading} className="shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-shadow">
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="mr-2 h-5 w-5" />
+                            Analyze Skills
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          )}
 
-          <div className="bg-card p-6 md:p-8 rounded-lg shadow-sm border">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <div className="grid md:grid-cols-2 gap-8">
-                  <FormField
-                    control={form.control}
-                    name="resumeFile"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-lg">Your Resume (PDF)</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              type="file"
-                              accept=".pdf"
-                              className="hidden"
-                              id="resume-upload"
-                              {...resumeFileRef}
-                              onChange={(e) => field.onChange(e.target.files?.[0])}
-                            />
-                            <label htmlFor="resume-upload" className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted/50">
-                              {selectedFile ? (
-                                <div className="text-center">
-                                  <FileText className="mx-auto h-12 w-12 text-primary" />
-                                  <p className="mt-2 font-semibold text-foreground">{selectedFile.name}</p>
-                                  <p className="text-xs text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                                  <p className="mt-2 text-sm text-accent">Click or drag to change</p>
-                                </div>
-                              ) : (
-                                <div className="text-center">
-                                  <FileUp className="mx-auto h-12 w-12 text-muted-foreground" />
-                                  <p className="mt-2 text-sm text-muted-foreground">
-                                    <span className="font-semibold text-accent">Click to upload</span> or drag and drop
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">PDF only, max 5MB</p>
-                                </div>
-                              )}
-                            </label>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="jobDescription"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-lg">Job Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Paste the job description here..."
-                            className="h-64 resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Paste the description of the job you're applying for.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex justify-center">
-                  <Button type="submit" size="lg" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="mr-2 h-4 w-4" />
-                        Analyze Skills
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-
-          <div className="mt-12">
+          <div className="mt-0">
             {isLoading && (
-              <div className="flex flex-col items-center justify-center text-center p-8 bg-card rounded-lg shadow-sm border">
+              <div className="flex flex-col items-center justify-center text-center p-8 bg-card rounded-lg shadow-sm border animate-in fade-in-50 duration-500">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
                 <h3 className="text-xl font-semibold font-headline">Generating Your Skill Report</h3>
                 <p className="text-muted-foreground mt-1">Our AI is analyzing your skills... please wait.</p>
               </div>
             )}
             {!isLoading && analysisResult && (
-              <div className="animate-in fade-in-50 duration-500">
+              <div className="animate-in fade-in-50 duration-500 space-y-8">
                 <SkillReport result={analysisResult} />
+                <div className="text-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setAnalysisResult(null);
+                      form.reset();
+                    }}
+                  >
+                    Analyze Another
+                  </Button>
+                </div>
               </div>
             )}
           </div>

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, CheckCircle2, Globe, Youtube } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Globe, GraduationCap, Youtube } from "lucide-react";
 import React from "react";
 
 interface SkillReportProps {
@@ -30,16 +30,16 @@ export function SkillReport({ result }: SkillReportProps) {
 
   return (
     <div className="space-y-8">
-      <Card className="overflow-hidden">
-        <CardHeader>
+      <Card className="overflow-hidden shadow-lg">
+        <CardHeader className="bg-muted/30">
           <CardTitle className="font-headline text-2xl">Analysis Complete!</CardTitle>
           <CardDescription>Here's the breakdown of your skill match for this role.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="flex items-center space-x-4">
             <span className="font-bold text-4xl text-primary">{matchPercentage}%</span>
             <div className="flex-1">
-              <p className="text-sm font-medium mb-1">Match Score</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Skill Match Score</p>
               <Progress value={matchPercentage} className="w-full h-3" />
             </div>
           </div>
@@ -48,11 +48,11 @@ export function SkillReport({ result }: SkillReportProps) {
       </Card>
       
       <div className="grid md:grid-cols-2 gap-8">
-        <Card>
+        <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
               <CheckCircle2 className="text-green-500" />
-              Matched Skills
+              Your Strengths
             </CardTitle>
             <CardDescription>
               These are the required skills found in your resume.
@@ -72,11 +72,11 @@ export function SkillReport({ result }: SkillReportProps) {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
               <AlertTriangle className="text-amber-500" />
-              Skills to Improve
+              Areas for Growth
             </CardTitle>
             <CardDescription>
               Consider developing these skills to be a stronger candidate.
@@ -99,9 +99,9 @@ export function SkillReport({ result }: SkillReportProps) {
       </div>
 
       {resourceSuggestions && resourceSuggestions.length > 0 && (
-        <Card>
+        <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="font-headline">Learning Resources</CardTitle>
+            <CardTitle className="font-headline flex items-center gap-2"><GraduationCap className="text-primary" /> Learning Resources</CardTitle>
             <CardDescription>
               Here are some AI-powered suggestions to help you learn the missing skills.
             </CardDescription>
@@ -110,7 +110,7 @@ export function SkillReport({ result }: SkillReportProps) {
             <Accordion type="single" collapsible className="w-full">
               {resourceSuggestions.map((suggestion, index) => (
                 <AccordionItem value={`item-${index}`} key={suggestion.skill}>
-                  <AccordionTrigger className="text-lg hover:no-underline">
+                  <AccordionTrigger className="text-lg hover:no-underline font-medium">
                     {suggestion.skill}
                   </AccordionTrigger>
                   <AccordionContent className="pt-2">
@@ -121,11 +121,11 @@ export function SkillReport({ result }: SkillReportProps) {
                             <Globe className="w-4 h-4 text-accent" />
                             Websites
                           </h4>
-                          <ul className="list-disc pl-5 space-y-1">
+                          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                             {suggestion.websites.map((site) => (
                               <li key={site}>
                                 <a
-                                  href={`https://${site}`}
+                                  href={`https://${site.replace(/^https?:\/\//, '')}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-primary hover:underline"
@@ -144,7 +144,7 @@ export function SkillReport({ result }: SkillReportProps) {
                             <Youtube className="w-4 h-4 text-accent" />
                             YouTube Channels
                           </h4>
-                          <ul className="list-disc pl-5 space-y-1">
+                          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                             {suggestion.youtubeChannels.map((channel) => (
                               <li key={channel}>
                                 <a
