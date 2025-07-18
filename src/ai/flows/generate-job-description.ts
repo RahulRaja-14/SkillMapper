@@ -78,6 +78,8 @@ const generateJobDescriptionFlow = ai.defineFlow(
 
     // Manually assemble the final job description string
     const jobDescription = `
+Job Title: ${input.role} (${input.experience})
+
 Role Summary
 ${roleSummary}
 
@@ -94,4 +96,3 @@ Preferred Qualifications
     return { jobDescription };
   }
 );
-
