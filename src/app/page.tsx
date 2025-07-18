@@ -27,7 +27,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -62,20 +61,6 @@ const fileToDataUri = (file: File): Promise<string> => {
   });
 };
 
-const jobRoles = [
-  "AI Engineer",
-  "Software Developer",
-  "Product Manager",
-  "Data Scientist",
-  "UX/UI Designer",
-  "DevOps Engineer",
-  "Marketing Manager",
-  "Data Analyst",
-  "Frontend Developer",
-  "Backend Developer",
-  "Full Stack Developer"
-];
-
 export default function SkillMapperPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -101,7 +86,7 @@ export default function SkillMapperPage() {
     e.preventDefault();
     let experience = "";
     if (experienceType === "fresher") {
-      experience = "Fresher";
+      experience = "Entry-level";
     } else {
       if (!experienceYears || isNaN(parseInt(experienceYears, 10)) || parseInt(experienceYears, 10) <= 0) {
         toast({
@@ -155,8 +140,18 @@ export default function SkillMapperPage() {
         extractJobSkills({ jobDescription: values.jobDescription }),
       ]);
       
-      const resumeSkillsSet = new Set(resumeResult.skills.map(skill => skill.toLowerCase().trim()));
-      const jobSkills = jobResult.requiredSkills.map(skill => skill.trim());
+      if (!resumeResult) {
+        toast({
+          variant: "destructive",
+          title: "Resume Analysis Failed",
+          description: "Could not extract skills from the resume. Please check the file and try again.",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const resumeSkillsSet = new Set((resumeResult.skills || []).map(skill => skill.toLowerCase().trim()));
+      const jobSkills = (jobResult.requiredSkills || []).map(skill => skill.trim());
 
       const matchedSkills = jobSkills.filter(skill => resumeSkillsSet.has(skill.toLowerCase()));
       const missingSkills = jobSkills.filter(skill => !resumeSkillsSet.has(skill.toLowerCase()));
@@ -263,18 +258,13 @@ export default function SkillMapperPage() {
                           <TabsContent value="generate" className="space-y-4 pt-2">
                               <div className="space-y-2">
                                 <Label htmlFor="job-role">Job Role</Label>
-                                <Select onValueChange={setJobRole} value={jobRole}>
-                                  <SelectTrigger id="job-role">
-                                    <SelectValue placeholder="Select a job role" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {jobRoles.map((role) => (
-                                      <SelectItem key={role} value={role}>
-                                        {role}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <Input
+                                  id="job-role"
+                                  type="text"
+                                  placeholder="e.g. AI Engineer"
+                                  value={jobRole}
+                                  onChange={(e) => setJobRole(e.target.value)}
+                                />
                               </div>
                               <div className="space-y-2">
                                 <Label>Experience</Label>
@@ -285,7 +275,7 @@ export default function SkillMapperPage() {
                                 >
                                   <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="fresher" id="fresher" />
-                                    <Label htmlFor="fresher">Fresher</Label>
+                                    <Label htmlFor="fresher">Entry-level</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="experienced" id="experienced" />
