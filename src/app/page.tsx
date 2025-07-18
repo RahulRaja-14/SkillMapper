@@ -68,6 +68,7 @@ export default function SkillMapperPage() {
   const [jobRole, setJobRole] = useState("");
   const [experienceType, setExperienceType] = useState<"fresher" | "experienced">("fresher");
   const [experienceYears, setExperienceYears] = useState("");
+  const [activeTab, setActiveTab] = useState("paste");
 
 
   const { toast } = useToast();
@@ -110,6 +111,7 @@ export default function SkillMapperPage() {
     try {
       const result = await generateJobDescription({ role: jobRole, experience });
       form.setValue("jobDescription", result.jobDescription, { shouldValidate: true });
+      setActiveTab("paste");
       toast({
         title: "Success!",
         description: "Job description generated and added to the form.",
@@ -238,7 +240,7 @@ export default function SkillMapperPage() {
                           <Briefcase className="text-primary" />
                           <FormLabel className="text-lg font-semibold">Job Description</FormLabel>
                         </div>
-                        <Tabs defaultValue="paste">
+                        <Tabs value={activeTab} onValueChange={setActiveTab}>
                           <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="paste">Paste</TabsTrigger>
                             <TabsTrigger value="generate">Generate w/ AI</TabsTrigger>
@@ -360,5 +362,3 @@ export default function SkillMapperPage() {
     </div>
   );
 }
-
-    
