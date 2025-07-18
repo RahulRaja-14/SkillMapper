@@ -57,11 +57,7 @@ const prompt = ai.definePrompt({
   
   Your task is to extract a list of all skills from the given resume text, which you will obtain by using the provided tool.
   You MUST call the extractTextFromPdf tool with the provided resumeDataUri to get the text of the resume.
-  Then, analyze the extracted text to identify all skills.
-
-  Resume PDF: {{media url=resumeDataUri}}
-
-  Skills:`,
+  Then, analyze the extracted text to identify all skills.`,
 });
 
 const extractResumeSkillsFlow = ai.defineFlow(
