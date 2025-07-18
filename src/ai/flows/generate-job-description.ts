@@ -30,14 +30,15 @@ const prompt = ai.definePrompt({
   name: 'generateJobDescriptionPrompt',
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: GenerateJobDescriptionOutputSchema},
-  prompt: `You are an expert Human Resources professional who specializes in writing compelling and accurate job descriptions.
+  prompt: `You are an expert Human Resources professional who writes compelling and accurate job descriptions.
 
-  Your task is to generate a detailed and realistic job description based *strictly* on the provided job role and experience level.
+  Your task is to generate a detailed job description based *only* on the following job role and experience level.
+  It is critical that you adhere strictly to the provided role and do not invent or default to another role (like "Software Developer").
 
   Job Title: {{role}}
   Experience Level: {{experience}}
 
-  The job description must be tailored to this specific role and should include:
+  The job description must be tailored specifically to this role and should include:
   - A brief, engaging summary of the role's primary function.
   - A list of key day-to-day responsibilities.
   - A list of required qualifications, including both technical and soft skills relevant to the specified role and experience.
