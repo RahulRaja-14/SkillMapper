@@ -25,7 +25,7 @@ import { generateJobDescription } from "@/ai/flows/generate-job-description";
 import { SkillReport } from "@/components/skill-report";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
 
@@ -66,7 +66,9 @@ export default function SkillMapperPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [jobRole, setJobRole] = useState("");
-  const [experienceLevel, setExperienceLevel] = useState("");
+  const [experienceType, setExperienceType] = useState<"fresher" | "experienced">("fresher");
+  const [experienceYears, setExperienceYears] = useState("");
+
 
   const { toast } = useToast();
 
@@ -81,17 +83,32 @@ export default function SkillMapperPage() {
 
   async function handleGenerateDescription(e: React.MouseEvent) {
     e.preventDefault();
-    if (!jobRole || !experienceLevel) {
+    let experience = "";
+    if (experienceType === "fresher") {
+      experience = "Fresher";
+    } else {
+      if (!experienceYears || isNaN(parseInt(experienceYears, 10)) || parseInt(experienceYears, 10) <= 0) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Experience",
+          description: "Please enter a valid number of years for experience.",
+        });
+        return;
+      }
+      experience = `${experienceYears} years`;
+    }
+
+    if (!jobRole) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please provide both a job role and an experience level.",
+        description: "Please provide a job role.",
       });
       return;
     }
     setIsGenerating(true);
     try {
-      const result = await generateJobDescription({ role: jobRole, experience: experienceLevel });
+      const result = await generateJobDescription({ role: jobRole, experience });
       form.setValue("jobDescription", result.jobDescription, { shouldValidate: true });
       toast({
         title: "Success!",
@@ -232,19 +249,35 @@ export default function SkillMapperPage() {
                                 <Input id="job-role" placeholder="e.g. Senior Product Manager" value={jobRole} onChange={(e) => setJobRole(e.target.value)} />
                               </div>
                               <div className="space-y-2">
-                                <Label>Experience Level</Label>
-                                <Select value={experienceLevel} onValuechange={setExperienceLevel}>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select experience level" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Entry-level">Entry-level</SelectItem>
-                                    <SelectItem value="Mid-level">Mid-level</SelectItem>
-                                    <SelectItem value="Senior">Senior</SelectItem>
-                                    <SelectItem value="Lead/Principal">Lead/Principal</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <Label>Experience</Label>
+                                <RadioGroup
+                                  value={experienceType}
+                                  onValueChange={(value: "fresher" | "experienced") => setExperienceType(value)}
+                                  className="flex gap-4 pt-1"
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="fresher" id="fresher" />
+                                    <Label htmlFor="fresher">Fresher</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="experienced" id="experienced" />
+                                    <Label htmlFor="experienced">Experienced</Label>
+                                  </div>
+                                </RadioGroup>
                               </div>
+                              {experienceType === "experienced" && (
+                                <div className="space-y-2 animate-in fade-in-20">
+                                  <Label htmlFor="experience-years">Years of Experience</Label>
+                                  <Input
+                                    id="experience-years"
+                                    type="number"
+                                    placeholder="e.g. 5"
+                                    value={experienceYears}
+                                    onChange={(e) => setExperienceYears(e.target.value)}
+                                    className="w-40"
+                                  />
+                                </div>
+                              )}
                               <Button variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isGenerating}>
                                 {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                                 Generate
@@ -327,3 +360,5 @@ export default function SkillMapperPage() {
     </div>
   );
 }
+
+    
