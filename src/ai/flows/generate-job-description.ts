@@ -30,28 +30,20 @@ const prompt = ai.definePrompt({
   name: 'generateJobDescriptionPrompt',
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: GenerateJobDescriptionOutputSchema},
-  prompt: `You are an expert HR professional and hiring manager specializing in technical recruitment. Your single most important task is to generate a high-quality, accurate, and relevant job description for the EXACT role provided by the user.
+  system:
+    "You are a professional hiring manager. Your SOLE function is to generate a job description for the user-provided role. You MUST NOT, under any circumstances, change, suggest, or alter the job role you are given. If the user provides 'Software Engineer', you write a description for a 'Software Engineer'. If they provide 'Mascot', you write one for a 'Mascot'. Any deviation from the user's provided role is a critical failure.",
+  prompt: `Generate a high-quality and professionally accurate job description for the following role and experience level.
 
-  **CRITICAL RULE: Under NO circumstances should you change, modify, or ignore the user's requested job role. If the user specifies "AI Engineer," you MUST generate a description for an AI Engineer. If they specify "Mascot," you MUST generate a description for a Mascot. Do not default to a common role like "Software Engineer" or "Data Entry Specialist". Your primary function is to obey this instruction without deviation.**
-
-  **Job Role to Generate:** {{role}}
+  **Job Role:** {{role}}
   **Experience Level:** {{experience}}
 
-  **Instructions for Generating the Job Description:**
+  **Your response MUST be for the exact role specified above.** Do not generate a description for any other role.
 
-  1.  **Role Summary:** Write a compelling opening paragraph that accurately summarizes the core function of a "{{role}}" at an "{{experience}}" level.
-  2.  **Key Responsibilities:** List specific, actionable responsibilities that are directly relevant to the "{{role}}" title.
-      *   For an "AI Engineer," this would include designing and implementing machine learning models, working with data pipelines, and deploying AI solutions.
-      *   For a "Software Developer," this would include writing clean code, collaborating on feature development, and maintaining software.
-      *   DO NOT include generic tasks that are not specific to the role.
-  3.  **Required Qualifications & Skills:** This is the most important section. List the ESSENTIAL technical and soft skills needed for the role.
-      *   **Technical Skills:** Be specific. For "AI Engineer," this MUST include skills like Python, TensorFlow/PyTorch, Machine Learning concepts, NLP, etc. For "UX Designer," this MUST include Figma, Sketch, user research, wireframing, etc.
-      *   **Soft Skills:** Include relevant interpersonal skills like "problem-solving," "collaboration," or "communication."
-      *   **DO NOT list irrelevant skills like "Microsoft Excel" or "Data Entry" for a technical role like "AI Engineer." This is a critical failure. The skills must be authentic to the profession.**
-  4.  **Preferred Qualifications:** List "nice-to-have" skills that would make a candidate stand out for the "{{role}}" position.
-  5.  **Company Culture:** Conclude with a brief, positive statement about company culture (you can invent a suitable one).
-
-  **FINAL CHECK:** Before outputting, re-read your generated description. Does it sound like a real job description for a "{{role}}"? Are the skills listed the actual, professional skills required for that specific job? If not, you must rewrite it until it is accurate. Your reputation depends on generating authentic, high-quality content.`,
+  The description must include:
+  1.  A role summary.
+  2.  A list of key responsibilities.
+  3.  A list of required technical and soft skills that are **directly relevant** to the specified '{{role}}'. For example, for a 'Software Engineer' role, you must include skills like 'data structures', 'algorithms', and specific programming languages, not 'data analysis' or 'statistical modeling'. For an 'AI Engineer' role, you must include 'machine learning', 'Python', and 'TensorFlow/PyTorch'.
+  4.  A list of preferred qualifications.`,
 });
 
 const generateJobDescriptionFlow = ai.defineFlow(
