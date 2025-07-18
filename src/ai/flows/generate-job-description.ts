@@ -21,13 +21,11 @@ const GenerateJobDescriptionInputSchema = z.object({
 });
 export type GenerateJobDescriptionInput = z.infer<typeof GenerateJobDescriptionInputSchema>;
 
-// The final output of the exported function.
 const GenerateJobDescriptionOutputSchema = z.object({
   jobDescription: z.string().describe('The generated job description, fully formatted.'),
 });
 export type GenerateJobDescriptionOutput = z.infer<typeof GenerateJobDescriptionOutputSchema>;
 
-// The structured output we expect from the AI model.
 const AiOutputSchema = z.object({
   roleSummary: z.string().describe("A brief, compelling overview of the job position."),
   keyResponsibilities: z.array(z.string()).describe("A list of specific duties and day-to-day tasks."),
@@ -44,18 +42,15 @@ const prompt = ai.definePrompt({
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: AiOutputSchema},
   model: gemini15flash,
+  system: `You are an expert HR professional who specializes in writing clear, concise, and compelling job descriptions. Your entire response must be based *only* on the user-provided 'Job Role' and 'Experience Level'. Do NOT generate a description for a different role.`,
   prompt: `
-  **CRITICAL INSTRUCTION: Your entire response must be based *only* on the user-provided 'Job Role' and 'Experience Level'. Do NOT generate a description for a different role.**
+  Generate a professional and detailed job description for a **{{role}}** with **{{experience}}** experience.
 
-  **Job Role:** {{role}}
-  **Experience Level:** {{experience}}
-
-  Generate the following components for a professional and highly detailed job description based *only* on the provided role and experience.
-
-  1.  **Role Summary:** Write a brief, compelling overview of the {{role}} position.
-  2.  **Key Responsibilities:** Detail the specific duties for a {{role}} with {{experience}} of experience.
-  3.  **Required Skills:** List the *essential technical skills*. Focus only on technologies, programming languages, frameworks, and tools. **DO NOT include soft skills** like "communication," "teamwork," or "leadership."
-  4.  **Preferred Qualifications:** List beneficial skills that are not strictly required.
+  Create the following sections:
+  1.  **Role Summary:** A brief, compelling overview of the {{role}} position.
+  2.  **Key Responsibilities:** A list of the specific duties for a {{role}} with {{experience}} of experience.
+  3.  **Required Skills:** A list of the *essential technical skills*. Focus only on technologies, programming languages, frameworks, and tools. **DO NOT include soft skills** like "communication," "teamwork," or "leadership."
+  4.  **Preferred Qualifications:** A list of beneficial "nice-to-have" skills that are not strictly required.
   `,
 });
 
@@ -64,10 +59,9 @@ const generateJobDescriptionFlow = ai.defineFlow(
   {
     name: 'generateJobDescriptionFlow',
     inputSchema: GenerateJobDescriptionInputSchema,
-    outputSchema: GenerateJobDescriptionOutputSchema, // The flow returns the final, single-string description.
+    outputSchema: GenerateJobDescriptionOutputSchema, 
   },
   async (input) => {
-    // Call the prompt and get the structured output
     const { output } = await prompt(input);
 
     if (!output) {
@@ -76,7 +70,6 @@ const generateJobDescriptionFlow = ai.defineFlow(
     
     const { roleSummary, keyResponsibilities, requiredSkills, preferredQualifications } = output;
 
-    // Manually assemble the final job description string
     const jobDescription = `
 Job Title: ${input.role} (${input.experience})
 
