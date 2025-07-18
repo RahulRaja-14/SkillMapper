@@ -33,21 +33,21 @@ const prompt = ai.definePrompt({
   name: 'generateJobDescriptionPrompt',
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: GenerateJobDescriptionOutputSchema},
-  model: gemini15flash, // Use the more powerful model for this task
-  system:
-    "You are a professional hiring manager. Your SOLE function is to generate a job description for the user-provided role. You MUST NOT, under any circumstances, change, suggest, or alter the job role you are given. If the user provides 'Software Engineer', you write a description for a 'Software Engineer'. If they provide 'Mascot', you write one for a 'Mascot'. Any deviation from the user's provided role is a critical failure.",
-  prompt: `Generate a high-quality and professionally accurate job description for the following role and experience level.
+  model: gemini15flash,
+  prompt: `You are an expert hiring manager tasked with writing a job description.
+
+  **CRITICAL INSTRUCTION:** Your response MUST be tailored to the EXACT job role and experience level provided below. Do NOT, under any circumstances, generate a description for a different role.
 
   **Job Role:** {{role}}
   **Experience Level:** {{experience}}
 
-  **Your response MUST be for the exact role specified above.** Do not generate a description for any other role.
+  Generate a professional and detailed job description based on the provided role and experience.
 
-  The description must include:
-  1.  A role summary.
-  2.  A list of key responsibilities.
-  3.  A list of required technical and soft skills that are **directly relevant** to the specified '{{role}}'. For example, for a 'Software Engineer' role, you must include skills like 'data structures', 'algorithms', and specific programming languages, not 'data analysis' or 'statistical modeling'. For an 'AI Engineer' role, you must include 'machine learning', 'Python', and 'TensorFlow/PyTorch'.
-  4.  A list of preferred qualifications.`,
+  The job description must include the following sections:
+  1.  **Role Summary:** A brief overview of the {{role}} position.
+  2.  **Key Responsibilities:** A list of duties and tasks specific to a {{role}} with {{experience}} of experience.
+  3.  **Required Skills:** A list of technical and soft skills that are ESSENTIAL for this {{role}}. For example, if the role is 'AI Engineer', you MUST include skills like 'Python', 'Machine Learning', and 'TensorFlow/PyTorch'. If the role is 'Software Developer', you MUST include skills like 'Data Structures', 'Algorithms', and relevant programming languages.
+  4.  **Preferred Qualifications:** Additional skills that would be beneficial for this specific role.`,
 });
 
 const generateJobDescriptionFlow = ai.defineFlow(
