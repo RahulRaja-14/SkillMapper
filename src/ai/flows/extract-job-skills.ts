@@ -29,9 +29,13 @@ const prompt = ai.definePrompt({
   name: 'extractJobSkillsPrompt',
   input: {schema: ExtractJobSkillsInputSchema},
   output: {schema: ExtractJobSkillsOutputSchema},
-  prompt: `You are an expert in analyzing job descriptions and extracting required skills, including soft skills that may be indirectly mentioned or implied.
+  prompt: `You are an expert in analyzing job descriptions and extracting required skills. Your task is to identify every skill a candidate would need to be successful in the role.
 
-  Analyze the following job description and extract a comprehensive list of skills required to perform the job effectively. Include both technical skills and soft skills (e.g., communication, teamwork, problem-solving, time management). Be specific and provide a detailed list of the skills. Output should be an array of strings.
+  Analyze the following job description and extract a comprehensive list of skills. This must include:
+  1.  **Technical Skills:** Specific programming languages, frameworks, databases, tools, software, and technical concepts mentioned.
+  2.  **Soft Skills:** Interpersonal abilities like communication, teamwork, leadership, problem-solving, time management, adaptability, and emotional intelligence. Look for these even if they are only implied by phrases like "collaborate with cross-functional teams" (implies Teamwork, Communication) or "fast-paced environment" (implies Adaptability).
+
+  Return only an array of strings representing the skills.
 
   Job Description:
   {{jobDescription}}`,
