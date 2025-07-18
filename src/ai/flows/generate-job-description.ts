@@ -10,6 +10,9 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
+
+const gemini15flash = googleAI.model('gemini-1.5-flash');
 
 const GenerateJobDescriptionInputSchema = z.object({
   role: z.string().describe('The job title or role (e.g., "Software Engineer").'),
@@ -30,6 +33,7 @@ const prompt = ai.definePrompt({
   name: 'generateJobDescriptionPrompt',
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: GenerateJobDescriptionOutputSchema},
+  model: gemini15flash, // Use the more powerful model for this task
   system:
     "You are a professional hiring manager. Your SOLE function is to generate a job description for the user-provided role. You MUST NOT, under any circumstances, change, suggest, or alter the job role you are given. If the user provides 'Software Engineer', you write a description for a 'Software Engineer'. If they provide 'Mascot', you write one for a 'Mascot'. Any deviation from the user's provided role is a critical failure.",
   prompt: `Generate a high-quality and professionally accurate job description for the following role and experience level.
