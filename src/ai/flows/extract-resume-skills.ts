@@ -10,7 +10,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import pdf from 'pdf-parse';
 
 const ExtractResumeSkillsInputSchema = z.object({
   resumeDataUri: z.string().describe("A PDF resume, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:application/pdf;base64,<encoded_data>'."),
@@ -38,6 +37,7 @@ const extractTextFromPdf = ai.defineTool(
     }),
   },
   async (input) => {
+    const pdf = (await import('pdf-parse')).default;
     const base64Data = input.resumeDataUri.split(',')[1];
     const pdfBuffer = Buffer.from(base64Data, 'base64');
     const data = await pdf(pdfBuffer);
