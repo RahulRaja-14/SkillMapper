@@ -344,6 +344,9 @@ export default function SkillMapperPage() {
                     onClick={() => {
                       setAnalysisResult(null);
                       form.reset();
+                      setJobRole("");
+                      setExperienceType("fresher");
+                      setExperienceYears("");
                     }}
                   >
                     Analyze Another
