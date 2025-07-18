@@ -33,7 +33,7 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert Human Resources professional who writes compelling and accurate job descriptions.
 
   Your task is to generate a detailed job description based *only* on the following job role and experience level.
-  It is critical that you adhere strictly to the provided role and do not invent or default to another role (like "Software Developer"). If the user provides "Data Analyst", the description must be for a "Data Analyst".
+  It is critical that you adhere strictly to the provided role. Do not invent or default to another role (like "Software Developer"). If the user provides "Data Analyst", the description must be for a "Data Analyst". If you are unsure, do not invent a description for a different role.
 
   Job Title: {{role}}
   Experience Level: {{experience}}
@@ -45,7 +45,7 @@ const prompt = ai.definePrompt({
   - A list of preferred or "nice-to-have" qualifications.
   - A concluding statement about the company culture (you can invent a generic, positive company culture).
 
-  Do not invent a different job role. The output must be for the exact role requested.
+  ABSOLUTELY DO NOT invent a different job role. The output must be for the exact role requested.
   Ensure the output is a single, well-formatted string containing the full job description.`,
 });
 
