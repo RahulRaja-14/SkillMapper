@@ -5,7 +5,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Loader2, Wand2, FileUp, FileText, Briefcase, Paperclip, Sparkles, BrainCircuit } from "lucide-react";
+import { Loader2, Wand2, FileUp, FileText, Briefcase, Paperclip, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,13 +23,11 @@ import { extractJobSkills } from "@/ai/flows/extract-job-skills";
 import { extractResumeSkills } from "@/ai/flows/extract-resume-skills";
 import { suggestResources, type SuggestResourcesOutput } from "@/ai/flows/suggest-resources";
 import { generateJobDescription } from "@/ai/flows/generate-job-description";
-import { getTechnicalSkills, type GetTechnicalSkillsOutput } from "@/ai/flows/get-technical-skills";
 import { SkillReport } from "@/components/skill-report";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { TechnicalSkillsDialog } from "@/components/technical-skills-dialog";
 
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -72,8 +70,6 @@ export default function SkillMapperPage() {
   const [experienceType, setExperienceType] = useState<"fresher" | "experienced">("fresher");
   const [experienceYears, setExperienceYears] = useState("");
   const [activeTab, setActiveTab] = useState("paste");
-  const [technicalSkills, setTechnicalSkills] = useState<GetTechnicalSkillsOutput | null>(null);
-  const [isSkillsDialogOpen, setIsSkillsDialogOpen] = useState(false);
 
 
   const { toast } = useToast();
@@ -100,36 +96,6 @@ export default function SkillMapperPage() {
         return null;
       }
       return `${experienceYears} years`;
-    }
-  }
-
-  async function handleShowSkills(e: React.MouseEvent) {
-    e.preventDefault();
-    const experience = getExperienceString();
-    if (!experience) return;
-    
-    if (!jobRole) {
-      toast({
-        variant: "destructive",
-        title: "Missing Information",
-        description: "Please provide a job role.",
-      });
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      const result = await getTechnicalSkills({ role: jobRole, experience });
-      setTechnicalSkills(result);
-      setIsSkillsDialogOpen(true);
-    } catch (error) {
-       console.error("Fetching skills failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "There was a problem fetching technical skills. Please try again.",
-      });
-    } finally {
-      setIsGenerating(false);
     }
   }
 
@@ -224,13 +190,6 @@ export default function SkillMapperPage() {
 
   return (
     <>
-      <TechnicalSkillsDialog 
-        isOpen={isSkillsDialogOpen}
-        setIsOpen={setIsSkillsDialogOpen}
-        skills={technicalSkills?.technicalSkills ?? []}
-        role={jobRole}
-        experience={experienceType === 'fresher' ? 'Fresher' : `${experienceYears} years`}
-      />
       <div className="flex flex-col min-h-screen bg-secondary/40 dark:bg-secondary/20">
         <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
           <div className="max-w-4xl mx-auto grid gap-12">
@@ -344,10 +303,6 @@ export default function SkillMapperPage() {
                                   </div>
                                 )}
                                 <div className="flex flex-wrap gap-2">
-                                  <Button variant="outline" size="sm" onClick={handleShowSkills} disabled={isGenerating}>
-                                    {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
-                                    Show Skills
-                                  </Button>
                                   <Button variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isGenerating}>
                                     {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                                     Generate

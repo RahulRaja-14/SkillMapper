@@ -31,7 +31,7 @@ export type GenerateJobDescriptionOutput = z.infer<typeof GenerateJobDescription
 const AiOutputSchema = z.object({
   roleSummary: z.string().describe("A brief, compelling overview of the job position."),
   keyResponsibilities: z.array(z.string()).describe("A list of specific duties and day-to-day tasks."),
-  requiredSkills: z.array(z.string()).describe("A list of essential technical and soft skills."),
+  requiredSkills: z.array(z.string()).describe("A list of essential technical skills. This should NOT include soft skills like 'communication' or 'teamwork'."),
   preferredQualifications: z.array(z.string()).describe("A list of additional skills that are beneficial but not strictly required."),
 });
 
@@ -54,7 +54,7 @@ const prompt = ai.definePrompt({
 
   1.  **Role Summary:** Write a brief, compelling overview of the {{role}} position.
   2.  **Key Responsibilities:** Detail the specific duties for a {{role}} with {{experience}} of experience.
-  3.  **Required Skills:** List the *essential* technical and soft skills. Be specific and accurate for the role.
+  3.  **Required Skills:** List the *essential technical skills*. Focus only on technologies, programming languages, frameworks, and tools. **DO NOT include soft skills** like "communication," "teamwork," or "leadership."
   4.  **Preferred Qualifications:** List beneficial skills that are not strictly required.
   `,
 });
