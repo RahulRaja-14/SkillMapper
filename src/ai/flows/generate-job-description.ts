@@ -30,23 +30,23 @@ const prompt = ai.definePrompt({
   name: 'generateJobDescriptionPrompt',
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: GenerateJobDescriptionOutputSchema},
-  prompt: `You are an expert Human Resources professional who writes compelling and accurate job descriptions.
+  prompt: `You are a job description writing AI. Your single most important instruction is to generate a job description for the exact 'Job Title' provided. You must not, under any circumstances, change the job title or generate a description for a different role.
 
-  Your task is to generate a detailed job description based *only* on the following job role and experience level.
-  It is critical that you adhere strictly to the provided role. Do not invent or default to another role (like "Software Developer"). If the user provides "Data Analyst", the description must be for a "Data Analyst".
+  **Critical Instruction:** The job title for the output MUST be "{{role}}". If the user provides "AI Developer", the title in the description must be "AI Developer". If they provide "Mascot", the title must be "Mascot". DO NOT change it to "Data Entry Specialist" or "Software Engineer" or any other title.
 
-  Job Title: {{role}}
-  Experience Level: {{experience}}
+  Generate a detailed job description for the following role:
 
-  The job description must be tailored specifically to this role and should include:
-  - A brief, engaging summary of the role's primary function.
-  - A list of key day-to-day responsibilities.
-  - A list of required qualifications, including both technical and soft skills relevant to the specified role and experience.
-  - A list of preferred or "nice-to-have" qualifications.
-  - A concluding statement about the company culture (you can invent a generic, positive company culture).
+  **Job Title:** {{role}}
+  **Experience Level:** {{experience}}
 
-  ABSOLUTELY DO NOT invent a different job role. The output must be for the exact role requested. If you are unsure, do not invent a description for a different role.
-  Ensure the output is a single, well-formatted string containing the full job description.`,
+  The description must include:
+  - An engaging summary of the role's primary function.
+  - A list of key responsibilities.
+  - A list of required qualifications relevant to the specified role.
+  - A list of preferred qualifications.
+  - A concluding statement about company culture (you can invent a positive one).
+
+  **Final Check:** Before you output, confirm that the job title in your generated description is exactly "{{role}}". Your primary function is to obey this rule.`,
 });
 
 const generateJobDescriptionFlow = ai.defineFlow(
