@@ -275,7 +275,7 @@ export default function SkillMapperPage() {
                                 >
                                   <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="fresher" id="fresher" />
-                                    <Label htmlFor="fresher">Entry-level</Label>
+                                    <Label htmlFor="fresher">Fresher</Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="experienced" id="experienced" />
