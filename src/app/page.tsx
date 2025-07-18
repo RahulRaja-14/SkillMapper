@@ -155,9 +155,14 @@ export default function SkillMapperPage() {
         return;
       }
 
-      const resumeSkillsSet = new Set((resumeResult.skills || []).map(skill => skill.toLowerCase().trim()));
+      // Explicitly get the skills from the user's resume
+      const userSkills = resumeResult.skills || [];
+      const resumeSkillsSet = new Set(userSkills.map(skill => skill.toLowerCase().trim()));
+
+      // Get the skills required by the job
       const jobSkills = (jobResult.requiredSkills || []).map(skill => skill.trim());
 
+      // Compare the user's skills against the job's requirements
       const matchedSkills = jobSkills.filter(skill => resumeSkillsSet.has(skill.toLowerCase()));
       const missingSkills = jobSkills.filter(skill => !resumeSkillsSet.has(skill.toLowerCase()));
 
