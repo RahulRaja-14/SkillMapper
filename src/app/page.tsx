@@ -27,6 +27,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -60,6 +61,20 @@ const fileToDataUri = (file: File): Promise<string> => {
     reader.readAsDataURL(file);
   });
 };
+
+const jobRoles = [
+  "AI Engineer",
+  "Software Developer",
+  "Product Manager",
+  "Data Scientist",
+  "UX/UI Designer",
+  "DevOps Engineer",
+  "Marketing Manager",
+  "Data Analyst",
+  "Frontend Developer",
+  "Backend Developer",
+  "Full Stack Developer"
+];
 
 export default function SkillMapperPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -248,7 +263,18 @@ export default function SkillMapperPage() {
                           <TabsContent value="generate" className="space-y-4 pt-2">
                               <div className="space-y-2">
                                 <Label htmlFor="job-role">Job Role</Label>
-                                <Input id="job-role" placeholder="e.g. Senior Product Manager" value={jobRole} onChange={(e) => setJobRole(e.target.value)} />
+                                <Select onValueChange={setJobRole} value={jobRole}>
+                                  <SelectTrigger id="job-role">
+                                    <SelectValue placeholder="Select a job role" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {jobRoles.map((role) => (
+                                      <SelectItem key={role} value={role}>
+                                        {role}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
                               <div className="space-y-2">
                                 <Label>Experience</Label>
@@ -343,7 +369,7 @@ export default function SkillMapperPage() {
                     variant="outline"
                     onClick={() => {
                       setAnalysisResult(null);
-                      form.reset();
+                      form.reset({ jobDescription: "" });
                       setJobRole("");
                       setExperienceType("fresher");
                       setExperienceYears("");
