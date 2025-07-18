@@ -5,3 +5,4 @@ import '@/ai/flows/extract-job-skills.ts';
 import '@/ai/flows/extract-resume-skills.ts';
 import '@/ai/flows/suggest-resources.ts';
 import '@/ai/flows/generate-job-description.ts';
+import '@/ai/flows/get-technical-skills.ts';
