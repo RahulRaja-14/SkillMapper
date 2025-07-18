@@ -10,9 +10,10 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import pdf from 'pdf-parse';
 
 const ExtractResumeSkillsInputSchema = z.object({
-  resumeText: z.string().describe('The text content of the resume.'),
+  resumeDataUri: z.string().describe("A PDF resume, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:application/pdf;base64,<encoded_data>'."),
 });
 export type ExtractResumeSkillsInput = z.infer<typeof ExtractResumeSkillsInputSchema>;
 
@@ -25,15 +26,40 @@ export async function extractResumeSkills(input: ExtractResumeSkillsInput): Prom
   return extractResumeSkillsFlow(input);
 }
 
+const extractTextFromPdf = ai.defineTool(
+  {
+    name: 'extractTextFromPdf',
+    description: 'Extracts text content from a PDF file provided as a data URI.',
+    inputSchema: z.object({
+      resumeDataUri: z.string(),
+    }),
+    outputSchema: z.object({
+      resumeText: z.string(),
+    }),
+  },
+  async (input) => {
+    const base64Data = input.resumeDataUri.split(',')[1];
+    const pdfBuffer = Buffer.from(base64Data, 'base64');
+    const data = await pdf(pdfBuffer);
+    return { resumeText: data.text };
+  }
+);
+
+
 const prompt = ai.definePrompt({
   name: 'extractResumeSkillsPrompt',
-  input: {schema: ExtractResumeSkillsInputSchema},
+  input: {
+    schema: z.object({
+        resumeText: z.string().describe("The text content of the resume."),
+    }),
+  },
   output: {schema: ExtractResumeSkillsOutputSchema},
+  tools: [extractTextFromPdf],
   prompt: `You are an expert in resume analysis. Your task is to extract a list of skills from the given resume text.
 
 Resume Text: {{{resumeText}}}
 
-Skills:`, // Removed example skills
+Skills:`,
 });
 
 const extractResumeSkillsFlow = ai.defineFlow(
@@ -42,8 +68,9 @@ const extractResumeSkillsFlow = ai.defineFlow(
     inputSchema: ExtractResumeSkillsInputSchema,
     outputSchema: ExtractResumeSkillsOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const { resumeText } = await extractTextFromPdf(input);
+    const { output } = await prompt({ resumeText });
     return output!;
   }
 );

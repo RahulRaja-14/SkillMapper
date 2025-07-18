@@ -4,7 +4,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Wand2, FileUp, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,16 +17,24 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { extractJobSkills } from "@/ai/flows/extract-job-skills";
 import { extractResumeSkills } from "@/ai/flows/extract-resume-skills";
 import { suggestResources, type SuggestResourcesOutput } from "@/ai/flows/suggest-resources";
 import { SkillReport } from "@/components/skill-report";
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_FILE_TYPES = ["application/pdf"];
+
 const formSchema = z.object({
-  resumeText: z.string().min(100, {
-    message: "Resume must be at least 100 characters.",
-  }),
+  resumeFile: z
+    .instanceof(File)
+    .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      (file) => ACCEPTED_FILE_TYPES.includes(file.type),
+      "Only .pdf files are accepted."
+    ),
   jobDescription: z.string().min(100, {
     message: "Job description must be at least 100 characters.",
   }),
@@ -39,6 +47,15 @@ export type AnalysisResult = {
   resourceSuggestions: SuggestResourcesOutput["suggestions"];
 };
 
+const fileToDataUri = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function SkillMapperPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -47,18 +64,21 @@ export default function SkillMapperPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      resumeText: "",
       jobDescription: "",
     },
   });
+
+  const resumeFileRef = form.register("resumeFile");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setAnalysisResult(null);
 
     try {
+      const resumeDataUri = await fileToDataUri(values.resumeFile);
+
       const [resumeResult, jobResult] = await Promise.all([
-        extractResumeSkills({ resumeText: values.resumeText }),
+        extractResumeSkills({ resumeDataUri }),
         extractJobSkills({ jobDescription: values.jobDescription }),
       ]);
       
@@ -93,6 +113,8 @@ export default function SkillMapperPage() {
     }
   }
 
+  const selectedFile = form.watch("resumeFile");
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
@@ -112,20 +134,40 @@ export default function SkillMapperPage() {
                 <div className="grid md:grid-cols-2 gap-8">
                   <FormField
                     control={form.control}
-                    name="resumeText"
+                    name="resumeFile"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-lg">Your Resume</FormLabel>
+                        <FormLabel className="text-lg">Your Resume (PDF)</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Paste the text from your resume here..."
-                            className="h-64 resize-none"
-                            {...field}
-                          />
+                          <div className="relative">
+                            <Input 
+                              type="file"
+                              accept=".pdf"
+                              className="hidden"
+                              id="resume-upload"
+                              {...resumeFileRef}
+                              onChange={(e) => field.onChange(e.target.files?.[0])}
+                            />
+                            <label htmlFor="resume-upload" className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted/50">
+                              {selectedFile ? (
+                                <div className="text-center">
+                                  <FileText className="mx-auto h-12 w-12 text-primary" />
+                                  <p className="mt-2 font-semibold text-foreground">{selectedFile.name}</p>
+                                  <p className="text-xs text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                  <p className="mt-2 text-sm text-accent">Click or drag to change</p>
+                                </div>
+                              ) : (
+                                <div className="text-center">
+                                  <FileUp className="mx-auto h-12 w-12 text-muted-foreground" />
+                                  <p className="mt-2 text-sm text-muted-foreground">
+                                    <span className="font-semibold text-accent">Click to upload</span> or drag and drop
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">PDF only, max 5MB</p>
+                                </div>
+                              )}
+                            </label>
+                          </div>
                         </FormControl>
-                        <FormDescription>
-                          Paste the full text of your resume for analysis.
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
