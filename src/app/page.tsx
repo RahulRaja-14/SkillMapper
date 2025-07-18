@@ -322,7 +322,6 @@ export default function SkillMapperPage() {
                                   <FormItem>
                                     <FormControl>
                                       <Textarea
-                                        placeholder="Paste the full job description here..."
                                         className="h-[14.5rem] resize-none"
                                         {...field}
                                       />
