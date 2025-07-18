@@ -76,11 +76,18 @@ const extractResumeSkillsFlow = ai.defineFlow(
     outputSchema: ExtractResumeSkillsOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    if (!output) {
-      // If the model still fails and returns null, return a valid empty object.
+    try {
+      const { output } = await prompt(input);
+      // The prompt call itself can throw a validation error if the model returns null.
+      // We still check for !output as a fallback.
+      if (!output) {
+        return { skills: [] };
+      }
+      return output;
+    } catch (e) {
+      console.error("Genkit flow 'extractResumeSkillsFlow' failed:", e);
+      // If any error occurs (including schema validation), return a valid empty object.
       return { skills: [] };
     }
-    return output;
   }
 );
