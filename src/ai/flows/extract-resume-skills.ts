@@ -54,7 +54,6 @@ const prompt = ai.definePrompt({
     }),
   },
   output: {schema: ExtractResumeSkillsOutputSchema},
-  tools: [extractTextFromPdf],
   prompt: `You are an expert in resume analysis. Your task is to extract a list of skills from the given resume text.
 
 Resume Text: {{{resumeText}}}
