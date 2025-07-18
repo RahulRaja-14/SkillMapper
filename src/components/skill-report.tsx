@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, CheckCircle2, Globe, GraduationCap, Youtube } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Globe, GraduationCap, LinkIcon, Youtube } from "lucide-react";
 import React from "react";
 
 interface SkillReportProps {
@@ -27,6 +27,10 @@ interface SkillReportProps {
 export function SkillReport({ result }: SkillReportProps) {
   const { matchedSkills, missingSkills, jobSkills, resourceSuggestions } = result;
   const matchPercentage = jobSkills.length > 0 ? Math.round((matchedSkills.length / jobSkills.length) * 100) : 0;
+  
+  const top5MissingSkills = missingSkills.slice(0, 5);
+
+  const resourceMap = new Map(resourceSuggestions.map(s => [s.skill.toLowerCase(), s]));
 
   return (
     <div className="space-y-8">
@@ -76,20 +80,41 @@ export function SkillReport({ result }: SkillReportProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
               <AlertTriangle className="text-amber-500" />
-              Areas for Growth
+              Top 5 Areas for Growth
             </CardTitle>
             <CardDescription>
-              Consider developing these skills to be a stronger candidate.
+              Focus on these key skills to become a stronger candidate.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {missingSkills.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {missingSkills.map((skill) => (
-                  <Badge key={skill} variant="outline" className="text-base py-1 px-3 border-amber-400 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30">
-                    {skill}
-                  </Badge>
-                ))}
+            {top5MissingSkills.length > 0 ? (
+              <div className="space-y-4">
+                {top5MissingSkills.map((skill) => {
+                  const suggestion = resourceMap.get(skill.toLowerCase());
+                  const hasResources = suggestion && (suggestion.websites.length > 0 || suggestion.youtubeChannels.length > 0);
+
+                  return (
+                    <div key={skill}>
+                      <p className="font-semibold text-base">{skill}</p>
+                      {hasResources && (
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                           {[...(suggestion.websites || []), ...(suggestion.youtubeChannels || [])].map((link, index) => (
+                              <a
+                                key={index}
+                                href={link.startsWith('http') ? link : `https://${link}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                              >
+                                <LinkIcon className="w-3 h-3"/>
+                                {link.replace(/^(https?:\/\/)?(www\.)?/, '')}
+                              </a>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-muted-foreground">Great news! You seem to have all the required skills.</p>
@@ -97,77 +122,6 @@ export function SkillReport({ result }: SkillReportProps) {
           </CardContent>
         </Card>
       </div>
-
-      {resourceSuggestions && resourceSuggestions.length > 0 && (
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2"><GraduationCap className="text-primary" /> Learning Resources</CardTitle>
-            <CardDescription>
-              Here are some AI-powered suggestions to help you learn the missing skills.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              {resourceSuggestions.map((suggestion, index) => (
-                <AccordionItem value={`item-${index}`} key={suggestion.skill}>
-                  <AccordionTrigger className="text-lg hover:no-underline font-medium">
-                    {suggestion.skill}
-                  </AccordionTrigger>
-                  <AccordionContent className="pt-2">
-                    <div className="space-y-4">
-                      {suggestion.websites.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold flex items-center gap-2 mb-2">
-                            <Globe className="w-4 h-4 text-accent" />
-                            Websites
-                          </h4>
-                          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                            {suggestion.websites.map((site) => (
-                              <li key={site}>
-                                <a
-                                  href={`https://${site.replace(/^https?:\/\//, '')}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary hover:underline"
-                                >
-                                  {site}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {suggestion.websites.length > 0 && suggestion.youtubeChannels.length > 0 && <Separator />}
-                      {suggestion.youtubeChannels.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold flex items-center gap-2 mb-2">
-                            <Youtube className="w-4 h-4 text-accent" />
-                            YouTube Channels
-                          </h4>
-                          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                            {suggestion.youtubeChannels.map((channel) => (
-                              <li key={channel}>
-                                <a
-                                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(channel)}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary hover:underline"
-                                >
-                                  {channel}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
