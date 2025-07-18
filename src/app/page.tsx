@@ -4,7 +4,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Loader2, Wand2, FileUp, FileText, Briefcase, Paperclip } from "lucide-react";
+import { Loader2, Wand2, FileUp, FileText, Briefcase, Paperclip, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,8 +21,13 @@ import { useToast } from "@/hooks/use-toast";
 import { extractJobSkills } from "@/ai/flows/extract-job-skills";
 import { extractResumeSkills } from "@/ai/flows/extract-resume-skills";
 import { suggestResources, type SuggestResourcesOutput } from "@/ai/flows/suggest-resources";
+import { generateJobDescription } from "@/ai/flows/generate-job-description";
 import { SkillReport } from "@/components/skill-report";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
@@ -58,7 +63,11 @@ const fileToDataUri = (file: File): Promise<string> => {
 
 export default function SkillMapperPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [jobRole, setJobRole] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("");
+
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -69,6 +78,36 @@ export default function SkillMapperPage() {
   });
 
   const resumeFileRef = form.register("resumeFile");
+
+  async function handleGenerateDescription(e: React.MouseEvent) {
+    e.preventDefault();
+    if (!jobRole || !experienceLevel) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please provide both a job role and an experience level.",
+      });
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const result = await generateJobDescription({ role: jobRole, experience: experienceLevel });
+      form.setValue("jobDescription", result.jobDescription, { shouldValidate: true });
+      toast({
+        title: "Success!",
+        description: "Job description generated and added to the form.",
+      });
+    } catch (error) {
+      console.error("Generation failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "There was a problem generating the job description. Please try again.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -177,29 +216,63 @@ export default function SkillMapperPage() {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="jobDescription"
-                        render={({ field }) => (
-                          <FormItem className="space-y-4">
-                            <div className="flex items-center gap-2">
-                              <Briefcase className="text-primary" />
-                              <FormLabel className="text-lg font-semibold">Job Description</FormLabel>
-                            </div>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Paste the full job description here..."
-                                className="h-64 resize-none"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="text-primary" />
+                          <FormLabel className="text-lg font-semibold">Job Description</FormLabel>
+                        </div>
+                        <Tabs defaultValue="paste">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="paste">Paste</TabsTrigger>
+                            <TabsTrigger value="generate">Generate w/ AI</TabsTrigger>
+                          </TabsList>
+                          <TabsContent value="generate" className="space-y-4 pt-2">
+                              <div className="space-y-2">
+                                <Label htmlFor="job-role">Job Role</Label>
+                                <Input id="job-role" placeholder="e.g. Senior Product Manager" value={jobRole} onChange={(e) => setJobRole(e.target.value)} />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Experience Level</Label>
+                                <Select value={experienceLevel} onValuechange={setExperienceLevel}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select experience level" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Entry-level">Entry-level</SelectItem>
+                                    <SelectItem value="Mid-level">Mid-level</SelectItem>
+                                    <SelectItem value="Senior">Senior</SelectItem>
+                                    <SelectItem value="Lead/Principal">Lead/Principal</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Button variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isGenerating}>
+                                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                Generate
+                              </Button>
+                          </TabsContent>
+                          <TabsContent value="paste">
+                            <FormField
+                              control={form.control}
+                              name="jobDescription"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Paste the full job description here..."
+                                      className="h-[14.5rem] resize-none"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TabsContent>
+                        </Tabs>
+                      </div>
                     </div>
                     <div className="flex justify-center">
-                      <Button type="submit" size="lg" disabled={isLoading} className="shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-shadow">
+                      <Button type="submit" size="lg" disabled={isLoading || isGenerating} className="shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-shadow">
                         {isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
