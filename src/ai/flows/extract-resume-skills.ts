@@ -37,11 +37,19 @@ const extractTextFromPdf = ai.defineTool(
     }),
   },
   async (input) => {
-    const pdf = (await import('pdf-parse')).default;
-    const base64Data = input.resumeDataUri.split(',')[1];
-    const pdfBuffer = Buffer.from(base64Data, 'base64');
-    const data = await pdf(pdfBuffer);
-    return { resumeText: data.text };
+    try {
+      const pdf = (await import('pdf-parse')).default;
+      const base64Data = input.resumeDataUri.split(',')[1];
+      if (!base64Data) {
+        return { resumeText: '' };
+      }
+      const pdfBuffer = Buffer.from(base64Data, 'base64');
+      const data = await pdf(pdfBuffer);
+      return { resumeText: data.text || '' };
+    } catch (e) {
+      console.error('Error parsing PDF:', e);
+      return { resumeText: '' };
+    }
   }
 );
 
@@ -53,11 +61,12 @@ const prompt = ai.definePrompt({
     schema: ExtractResumeSkillsInputSchema,
   },
   output: {schema: ExtractResumeSkillsOutputSchema},
-  prompt: `You are an expert in resume analysis. 
-  
-  Your task is to extract a list of all skills from the given resume text, which you will obtain by using the provided tool.
-  You MUST call the extractTextFromPdf tool with the provided resumeDataUri to get the text of the resume.
-  Then, analyze the extracted text to identify all skills.`,
+  prompt: `You are an expert resume analysis AI. Your task is to extract skills from a resume.
+
+  1.  **CRITICAL:** You **MUST** call the 'extractTextFromPdf' tool using the provided 'resumeDataUri'. Do not try to read the file yourself.
+  2.  After you receive the resume text from the tool, analyze that text to identify a list of all technical and soft skills.
+  3.  Return the identified skills as a list of strings in the 'skills' field.
+  4.  **IMPORTANT:** If the extracted text is empty or you cannot find any skills, you MUST return an empty array for the 'skills' field (e.g., '{"skills": []}'). You must not return null.`,
 });
 
 const extractResumeSkillsFlow = ai.defineFlow(
@@ -68,6 +77,10 @@ const extractResumeSkillsFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    return output!;
+    if (!output) {
+      // If the model still fails and returns null, return a valid empty object.
+      return { skills: [] };
+    }
+    return output;
   }
 );
