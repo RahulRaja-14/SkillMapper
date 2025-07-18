@@ -48,17 +48,20 @@ const extractTextFromPdf = ai.defineTool(
 
 const prompt = ai.definePrompt({
   name: 'extractResumeSkillsPrompt',
+  tools: [extractTextFromPdf],
   input: {
-    schema: z.object({
-        resumeText: z.string().describe("The text content of the resume."),
-    }),
+    schema: ExtractResumeSkillsInputSchema,
   },
   output: {schema: ExtractResumeSkillsOutputSchema},
-  prompt: `You are an expert in resume analysis. Your task is to extract a list of skills from the given resume text.
+  prompt: `You are an expert in resume analysis. 
+  
+  Use the provided tool to extract the text from the resume PDF.
+  
+  Then, your task is to extract a list of all skills from the given resume text.
 
-Resume Text: {{{resumeText}}}
+  Resume PDF: {{media url=resumeDataUri}}
 
-Skills:`,
+  Skills:`,
 });
 
 const extractResumeSkillsFlow = ai.defineFlow(
@@ -68,8 +71,7 @@ const extractResumeSkillsFlow = ai.defineFlow(
     outputSchema: ExtractResumeSkillsOutputSchema,
   },
   async (input) => {
-    const { resumeText } = await extractTextFromPdf(input);
-    const { output } = await prompt({ resumeText });
+    const { output } = await prompt(input);
     return output!;
   }
 );
