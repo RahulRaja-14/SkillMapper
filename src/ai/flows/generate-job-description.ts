@@ -42,7 +42,7 @@ const prompt = ai.definePrompt({
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: AiOutputSchema},
   model: gemini15flash,
-  system: `You are an expert HR professional who specializes in writing clear, concise, and compelling job descriptions. Your entire response must be based *only* on the user-provided 'Job Role' and 'Experience Level'. Do NOT generate a description for a different role.`,
+  system: `You are an expert HR professional. Your task is to write a job description. CRITICAL: The entire response must be based *only* on the user-provided 'Job Role' and 'Experience Level'. Do NOT generate a description for a different role. For example, if the user provides "AI Engineer", you MUST write a description for an "AI Engineer", not a "Software Engineer".`,
   prompt: `
   Generate a professional and detailed job description for a **{{role}}** with **{{experience}}** experience.
 
