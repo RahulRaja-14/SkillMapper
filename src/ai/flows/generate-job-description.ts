@@ -68,4 +68,3 @@ const generateJobDescriptionFlow = ai.defineFlow(
     return output;
   }
 );
-
