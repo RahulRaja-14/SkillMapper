@@ -192,6 +192,7 @@ export default function SkillMapperPage() {
   }
 
   const selectedFile = form.watch("resumeFile");
+  const jobDescriptionValue = form.watch("jobDescription");
 
   return (
     <>
@@ -322,8 +323,10 @@ export default function SkillMapperPage() {
                                   <FormItem>
                                     <FormControl>
                                       <Textarea
+                                        placeholder="Paste the full job description here..."
                                         className="h-[14.5rem] resize-none"
                                         {...field}
+                                        value={jobDescriptionValue}
                                       />
                                     </FormControl>
                                     <FormMessage />
