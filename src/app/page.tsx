@@ -54,12 +54,12 @@ export type AnalysisResult = {
   resourceSuggestions: SuggestResourcesOutput["suggestions"];
 };
 
-const fileToText = (file: File): Promise<string> => {
+const fileToDataUri = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
-    reader.readAsText(file);
+    reader.readAsDataURL(file);
   });
 };
 
@@ -136,11 +136,11 @@ export default function SkillMapperPage() {
     setAnalysisResult(null);
 
     try {
-      const resumeText = await fileToText(values.resumeFile);
+      const resumeDataUri = await fileToDataUri(values.resumeFile);
 
       const { matchedSkills, missingSkills, allJobSkills } = await skillMatcher({
         jobDescription: values.jobDescription,
-        resume: resumeText,
+        resumeDataUri: resumeDataUri,
       });
 
       let resourceSuggestions: SuggestResourcesOutput["suggestions"] = [];

@@ -16,7 +16,7 @@ import {extractResumeSkills, ExtractResumeSkillsOutput} from './extract-resume-s
 
 const SkillMatcherInputSchema = z.object({
   jobDescription: z.string().describe('The full text of the job description.'),
-  resume: z.string().describe('The full text of the resume.'),
+  resumeDataUri: z.string().describe("A PDF resume, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:application/pdf;base64,<encoded_data>'."),
 });
 export type SkillMatcherInput = z.infer<typeof SkillMatcherInputSchema>;
 
@@ -48,7 +48,7 @@ const skillMatcherFlow = ai.defineFlow(
   async (input) => {
     const [jobSkills, resumeSkills] = await Promise.all([
       extractJobSkills({ jobDescription: input.jobDescription }),
-      extractResumeSkills({ resume: input.resume }),
+      extractResumeSkills({ resumeDataUri: input.resumeDataUri }),
     ]);
 
     return compareSkills(jobSkills, resumeSkills);
