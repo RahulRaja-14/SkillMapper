@@ -61,12 +61,17 @@ const prompt = ai.definePrompt({
     schema: ExtractResumeSkillsInputSchema,
   },
   output: {schema: ExtractResumeSkillsOutputSchema},
-  prompt: `You are an expert resume analysis AI. Your task is to extract skills from a resume.
+  prompt: `You are an expert resume analysis AI. Your task is to perform a deep analysis of a resume and extract a comprehensive list of all skills.
 
-  1.  **CRITICAL:** You **MUST** call the 'extractTextFromPdf' tool using the provided 'resumeDataUri'. Do not try to read the file yourself.
-  2.  After you receive the resume text from the tool, analyze that text to identify a list of all technical and soft skills.
-  3.  Return the identified skills as a list of strings in the 'skills' field.
-  4.  **IMPORTANT:** If the extracted text is empty or you cannot find any skills, you MUST return an empty array for the 'skills' field (e.g., '{"skills": []}'). You must not return null.`,
+  **Instructions:**
+
+  1.  **CRITICAL:** You **MUST** call the \`extractTextFromPdf\` tool using the provided \`resumeDataUri\` to get the text content of the resume. Do not attempt to read the resume content directly.
+  2.  After receiving the text from the tool, analyze it thoroughly to identify all skills. This list must be exhaustive and include:
+      *   **Technical Skills:** All programming languages, frameworks, libraries, databases, tools (e.g., Docker, Git, CI/CD), cloud platforms (AWS, GCP, Azure), operating systems, and software mentioned.
+      *   **Inferred Skills:** Based on project descriptions, achievements, and work experience, infer the skills that are demonstrated but not explicitly listed. For example, if a project involved "building a scalable REST API," you should infer skills like "API Design," "HTTP," and potentially specific backend technologies if mentioned elsewhere.
+      *   **Soft Skills:** Interpersonal and professional abilities like Teamwork, Communication, Problem-Solving, Leadership, and Time Management.
+  3.  Return a single, flat array of all identified skills in the \`skills\` field.
+  4.  **IMPORTANT:** If the extracted text is empty or you cannot find any skills, you MUST return an empty array for the 'skills' field (e.g., \`{"skills": []}\`). Do not return null or an error.`,
 });
 
 const extractResumeSkillsFlow = ai.defineFlow(
