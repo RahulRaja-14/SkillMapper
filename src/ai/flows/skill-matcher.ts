@@ -11,8 +11,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {extractJobSkills, ExtractJobSkillsOutput} from './extract-job-skills';
-import {extractResumeSkills, ExtractResumeSkillsOutput} from './extract-resume-skills';
+import {extractJobSkills, type ExtractJobSkillsOutput} from './extract-job-skills';
+import {extractResumeSkills, type ExtractResumeSkillsOutput} from './extract-resume-skills';
 
 const SkillMatcherInputSchema = z.object({
   jobDescription: z.string().describe('The full text of the job description.'),
@@ -28,13 +28,13 @@ const SkillMatcherOutputSchema = z.object({
 export type SkillMatcherOutput = z.infer<typeof SkillMatcherOutputSchema>;
 
 function compareSkills(jobSkills: ExtractJobSkillsOutput, resumeSkills: ExtractResumeSkillsOutput): SkillMatcherOutput {
-  const jobSkillSet = new Set(jobSkills.requiredSkills.map(skill => skill.toLowerCase().trim()));
+  const jobSkillSet = new Set(jobSkills.requiredSkills.map(skill => skill.trim()));
   const resumeSkillSet = new Set(resumeSkills.skills.map(skill => skill.toLowerCase().trim()));
 
-  const allJobSkills = Array.from(jobSkillSet).map(skill => jobSkills.requiredSkills.find(s => s.toLowerCase().trim() === skill)!);
+  const allJobSkills = Array.from(jobSkillSet);
 
-  const matchedSkills = allJobSkills.filter(skill => resumeSkillSet.has(skill.toLowerCase().trim()));
-  const missingSkills = allJobSkills.filter(skill => !resumeSkillSet.has(skill.toLowerCase().trim()));
+  const matchedSkills = allJobSkills.filter(skill => resumeSkillSet.has(skill.toLowerCase()));
+  const missingSkills = allJobSkills.filter(skill => !resumeSkillSet.has(skill.toLowerCase()));
 
   return { matchedSkills, missingSkills, allJobSkills };
 }
