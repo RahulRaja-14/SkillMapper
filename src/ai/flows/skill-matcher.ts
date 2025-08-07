@@ -23,17 +23,20 @@ export type SkillMatcherInput = z.infer<typeof SkillMatcherInputSchema>;
 const SkillMatcherOutputSchema = z.object({
   matchedSkills: z.array(z.string()).describe('A list of skills that are present in both the resume and the job description.'),
   missingSkills: z.array(z.string()).describe('A list of skills that are required for the job but not found in the resume.'),
+  allJobSkills: z.array(z.string()).describe('A list of all skills required for the job.'),
 });
 export type SkillMatcherOutput = z.infer<typeof SkillMatcherOutputSchema>;
 
 function compareSkills(jobSkills: ExtractJobSkillsOutput, resumeSkills: ExtractResumeSkillsOutput): SkillMatcherOutput {
-  const jobSkillSet = new Set(jobSkills.skills.map(skill => skill.toLowerCase()));
-  const resumeSkillSet = new Set(resumeSkills.skills.map(skill => skill.toLowerCase()));
+  const jobSkillSet = new Set(jobSkills.requiredSkills.map(skill => skill.toLowerCase().trim()));
+  const resumeSkillSet = new Set(resumeSkills.skills.map(skill => skill.toLowerCase().trim()));
 
-  const matchedSkills = [...jobSkillSet].filter(skill => resumeSkillSet.has(skill));
-  const missingSkills = [...jobSkillSet].filter(skill => !resumeSkillSet.has(skill));
+  const allJobSkills = Array.from(jobSkillSet).map(skill => jobSkills.requiredSkills.find(s => s.toLowerCase().trim() === skill)!);
 
-  return { matchedSkills, missingSkills };
+  const matchedSkills = allJobSkills.filter(skill => resumeSkillSet.has(skill.toLowerCase().trim()));
+  const missingSkills = allJobSkills.filter(skill => !resumeSkillSet.has(skill.toLowerCase().trim()));
+
+  return { matchedSkills, missingSkills, allJobSkills };
 }
 
 const skillMatcherFlow = ai.defineFlow(

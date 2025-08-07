@@ -40,7 +40,9 @@ const formSchema = z.object({
       (file) => ACCEPTED_FILE_TYPES.includes(file.type),
       "Only .pdf files are accepted."
     ),
-  jobDescription: z.string().min(100, {
+  jobDescription: z.string().min(1, {
+    message: "Job description cannot be empty.",
+  }).min(100, {
     message: "Job description must be at least 100 characters.",
   }),
 });
@@ -66,8 +68,8 @@ export default function SkillMapperPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [jobRole, setJobRole] = useState("");
-  const [experienceType, setExperienceType] = useState<"fresher" | "experienced">("fresher");
-  const [experienceYears, setExperienceYears] = useState("");
+  const [experienceType, setExperienceType] = useState<"entry" | "mid" | "senior">("entry");
+  const [experienceYears, setExperienceYears] = useState<number | "">("");
   const [activeTab, setActiveTab] = useState("paste");
 
 
@@ -82,26 +84,8 @@ export default function SkillMapperPage() {
 
   const resumeFileRef = form.register("resumeFile");
   
-  const getExperienceString = () => {
-     if (experienceType === "fresher") {
-      return "Entry-level";
-    } else {
-      if (!experienceYears || isNaN(parseInt(experienceYears, 10)) || parseInt(experienceYears, 10) <= 0) {
-        toast({
-          variant: "destructive",
-          title: "Invalid Experience",
-          description: "Please enter a valid number of years for experience.",
-        });
-        return null;
-      }
-      return `${experienceYears} years`;
-    }
-  }
-
   async function handleGenerateDescription(e: React.MouseEvent) {
     e.preventDefault();
-    const experience = getExperienceString();
-    if (!experience) return;
 
     if (!jobRole) {
       toast({
@@ -111,9 +95,24 @@ export default function SkillMapperPage() {
       });
       return;
     }
+
+    const years = Number(experienceYears);
+    if (experienceType !== 'entry' && (isNaN(years) || years <= 0)) {
+       toast({
+        variant: "destructive",
+        title: "Invalid Experience",
+        description: "Please enter a valid number of years for experience.",
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
-      const result = await generateJobDescription({ role: jobRole, experience });
+      const result = await generateJobDescription({
+        jobRole: jobRole,
+        experienceLevel: experienceType,
+        ...(experienceType !== 'entry' && { yearsOfExperience: years })
+      });
       form.setValue("jobDescription", result.jobDescription, { shouldValidate: true });
       setActiveTab("paste");
       toast({
@@ -139,7 +138,7 @@ export default function SkillMapperPage() {
     try {
       const resumeText = await fileToText(values.resumeFile);
 
-      const { matchedSkills, missingSkills } = await skillMatcher({
+      const { matchedSkills, missingSkills, allJobSkills } = await skillMatcher({
         jobDescription: values.jobDescription,
         resume: resumeText,
       });
@@ -153,7 +152,7 @@ export default function SkillMapperPage() {
       setAnalysisResult({
         matchedSkills,
         missingSkills,
-        jobSkills: [...matchedSkills, ...missingSkills],
+        jobSkills: allJobSkills,
         resourceSuggestions,
       });
 
@@ -257,23 +256,27 @@ export default function SkillMapperPage() {
                                   />
                                 </div>
                                 <div className="space-y-2">
-                                  <Label>Experience</Label>
+                                  <Label>Experience Level</Label>
                                   <RadioGroup
                                     value={experienceType}
-                                    onValueChange={(value: "fresher" | "experienced") => setExperienceType(value)}
+                                    onValueChange={(value: "entry" | "mid" | "senior") => setExperienceType(value)}
                                     className="flex gap-4 pt-1"
                                   >
                                     <div className="flex items-center space-x-2">
-                                      <RadioGroupItem value="fresher" id="fresher" />
-                                      <Label htmlFor="fresher">Fresher</Label>
+                                      <RadioGroupItem value="entry" id="entry" />
+                                      <Label htmlFor="entry">Entry</Label>
                                     </div>
                                     <div className="flex items-center space-x-2">
-                                      <RadioGroupItem value="experienced" id="experienced" />
-                                      <Label htmlFor="experienced">Experienced</Label>
+                                      <RadioGroupItem value="mid" id="mid" />
+                                      <Label htmlFor="mid">Mid-level</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="senior" id="senior" />
+                                      <Label htmlFor="senior">Senior</Label>
                                     </div>
                                   </RadioGroup>
                                 </div>
-                                {experienceType === "experienced" && (
+                                {experienceType !== "entry" && (
                                   <div className="space-y-2 animate-in fade-in-20">
                                     <Label htmlFor="experience-years">Years of Experience</Label>
                                     <Input
@@ -281,7 +284,7 @@ export default function SkillMapperPage() {
                                       type="number"
                                       placeholder="e.g. 5"
                                       value={experienceYears}
-                                      onChange={(e) => setExperienceYears(e.target.value)}
+                                      onChange={(e) => setExperienceYears(e.target.value === '' ? '' : Number(e.target.value))}
                                       className="w-40"
                                     />
                                   </div>
@@ -301,7 +304,7 @@ export default function SkillMapperPage() {
                                   <FormItem>
                                     <FormControl>
                                       <Textarea
-                                        placeholder="Paste the full job description here..."
+                                        placeholder=""
                                         className="h-[14.5rem] resize-none"
                                         {...field}
                                         value={jobDescriptionValue}
@@ -354,7 +357,7 @@ export default function SkillMapperPage() {
                         setAnalysisResult(null);
                         form.reset({ jobDescription: "" });
                         setJobRole("");
-                        setExperienceType("fresher");
+                        setExperienceType("entry");
                         setExperienceYears("");
                       }}
                     >
