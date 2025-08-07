@@ -24,13 +24,31 @@ const SkillMatcherOutputSchema = z.object({
   matchedSkills: z.array(z.string()).describe('A list of skills that are present in both the resume and the job description.'),
   missingSkills: z.array(z.string()).describe('A list of skills that are required for the job but not found in the resume.'),
   allJobSkills: z.array(z.string()).describe('A list of all skills required for the job.'),
+  resumeText: z.string().describe('The extracted text from the resume for debugging.'),
 });
 export type SkillMatcherOutput = z.infer<typeof SkillMatcherOutputSchema>;
 
-function compareSkills(jobSkills: string[], resumeSkills: string[]): SkillMatcherOutput {
+
+async function extractTextFromPdf(resumeDataUri: string): Promise<string> {
+  try {
+    const pdf = (await import('pdf-parse')).default;
+    const base64Data = resumeDataUri.split(',')[1];
+    if (!base64Data) {
+      console.error('No Base64 data found in data URI.');
+      return '';
+    }
+    const pdfBuffer = Buffer.from(base64Data, 'base64');
+    const data = await pdf(pdfBuffer);
+    return data.text || '';
+  } catch (e) {
+    console.error('Error parsing PDF:', e);
+    return '';
+  }
+}
+
+function compareSkills(jobSkills: string[], resumeSkills: string[]): Omit<SkillMatcherOutput, 'resumeText'> {
   const resumeSkillSet = new Set(resumeSkills.map(skill => skill.toLowerCase().trim()));
 
-  // Create a unique, trimmed set of job skills to avoid duplicates from the AI.
   const allJobSkills = Array.from(new Set(jobSkills.map(s => s.trim())));
 
   const matchedSkills = allJobSkills.filter(skill => resumeSkillSet.has(skill.toLowerCase()));
@@ -47,16 +65,23 @@ const skillMatcherFlow = ai.defineFlow(
     outputSchema: SkillMatcherOutputSchema,
   },
   async (input) => {
+    
+    const resumeText = await extractTextFromPdf(input.resumeDataUri);
+
     const [jobSkillsResult, resumeSkillsResult] = await Promise.all([
       extractJobSkills({ jobDescription: input.jobDescription }),
       extractResumeSkills({ resumeDataUri: input.resumeDataUri }),
     ]);
-
-    // Handle cases where skill extraction might return null or undefined outputs.
+    
     const jobSkills = jobSkillsResult?.requiredSkills || [];
     const resumeSkills = resumeSkillsResult?.skills || [];
+    
+    const comparison = compareSkills(jobSkills, resumeSkills);
 
-    return compareSkills(jobSkills, resumeSkills);
+    return {
+      ...comparison,
+      resumeText: resumeText,
+    };
   }
 );
 
