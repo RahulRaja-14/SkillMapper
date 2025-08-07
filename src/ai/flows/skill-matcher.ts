@@ -28,6 +28,7 @@ const SkillMatcherOutputSchema = z.object({
 export type SkillMatcherOutput = z.infer<typeof SkillMatcherOutputSchema>;
 
 function compareSkills(jobSkills: ExtractJobSkillsOutput, resumeSkills: ExtractResumeSkillsOutput): SkillMatcherOutput {
+  // Ensure all comparisons are case-insensitive by converting all skills to lower case.
   const jobSkillSet = new Set(jobSkills.requiredSkills.map(skill => skill.toLowerCase().trim()));
   const resumeSkillSet = new Set(resumeSkills.skills.map(skill => skill.toLowerCase().trim()));
 
