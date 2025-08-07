@@ -76,10 +76,10 @@ const extractResumeSkillsFlow = ai.defineFlow(
     outputSchema: ExtractResumeSkillsOutputSchema,
   },
   async (input) => {
-    // Step 1: Directly extract text from the PDF. This is no longer an AI tool call.
+    // Step 1: Directly extract text from the PDF.
     const resumeText = await extractTextFromPdf(input.resumeDataUri);
 
-    // If text extraction fails, return empty skills list immediately.
+    // If text extraction fails or is empty, return an empty skills list immediately.
     if (!resumeText) {
       console.error("Resume text could not be extracted. Returning empty skills array.");
       return { skills: [] };

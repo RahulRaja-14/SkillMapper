@@ -145,6 +145,7 @@ export default function SkillMapperPage() {
 
       let resourceSuggestions: SuggestResourcesOutput["suggestions"] = [];
       if (missingSkills.length > 0) {
+        // We only fetch suggestions for the skills that are actually missing.
         const resources = await suggestResources({ missingSkills });
         resourceSuggestions = resources.suggestions;
       }
@@ -355,7 +356,7 @@ export default function SkillMapperPage() {
                       variant="outline"
                       onClick={() => {
                         setAnalysisResult(null);
-                        form.reset({ jobDescription: "" });
+                        form.reset({ resumeFile: undefined, jobDescription: "" });
                         setJobRole("");
                         setExperienceType("entry");
                         setExperienceYears("");

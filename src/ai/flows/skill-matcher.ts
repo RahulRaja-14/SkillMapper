@@ -28,10 +28,10 @@ const SkillMatcherOutputSchema = z.object({
 export type SkillMatcherOutput = z.infer<typeof SkillMatcherOutputSchema>;
 
 function compareSkills(jobSkills: ExtractJobSkillsOutput, resumeSkills: ExtractResumeSkillsOutput): SkillMatcherOutput {
-  const jobSkillSet = new Set(jobSkills.requiredSkills.map(skill => skill.trim()));
+  const jobSkillSet = new Set(jobSkills.requiredSkills.map(skill => skill.toLowerCase().trim()));
   const resumeSkillSet = new Set(resumeSkills.skills.map(skill => skill.toLowerCase().trim()));
 
-  const allJobSkills = Array.from(jobSkillSet);
+  const allJobSkills = jobSkills.requiredSkills.map(s => s.trim());
 
   const matchedSkills = allJobSkills.filter(skill => resumeSkillSet.has(skill.toLowerCase()));
   const missingSkills = allJobSkills.filter(skill => !resumeSkillSet.has(skill.toLowerCase()));
@@ -46,10 +46,14 @@ const skillMatcherFlow = ai.defineFlow(
     outputSchema: SkillMatcherOutputSchema,
   },
   async (input) => {
-    const [jobSkills, resumeSkills] = await Promise.all([
+    const [jobSkillsResult, resumeSkillsResult] = await Promise.all([
       extractJobSkills({ jobDescription: input.jobDescription }),
       extractResumeSkills({ resumeDataUri: input.resumeDataUri }),
     ]);
+
+    // Handle cases where skill extraction might return null or undefined outputs.
+    const jobSkills = jobSkillsResult || { requiredSkills: [] };
+    const resumeSkills = resumeSkillsResult || { skills: [] };
 
     return compareSkills(jobSkills, resumeSkills);
   }
