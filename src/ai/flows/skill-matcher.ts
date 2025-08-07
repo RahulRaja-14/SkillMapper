@@ -30,7 +30,7 @@ export type SkillMatcherOutput = z.infer<typeof SkillMatcherOutputSchema>;
 function compareSkills(jobSkills: string[], resumeSkills: string[]): SkillMatcherOutput {
   const resumeSkillSet = new Set(resumeSkills.map(skill => skill.toLowerCase().trim()));
 
-  // Create a unique set of job skills to avoid duplicates from the AI.
+  // Create a unique, trimmed set of job skills to avoid duplicates from the AI.
   const allJobSkills = Array.from(new Set(jobSkills.map(s => s.trim())));
 
   const matchedSkills = allJobSkills.filter(skill => resumeSkillSet.has(skill.toLowerCase()));
