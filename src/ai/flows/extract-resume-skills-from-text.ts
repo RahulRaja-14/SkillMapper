@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -35,12 +36,19 @@ const prompt = ai.definePrompt({
 
   **Instructions:**
 
-  1.  Analyze the provided resume text thoroughly to identify all skills. This list must be exhaustive and include:
-      *   **Technical Skills:** All programming languages, frameworks, libraries, databases, tools (e.g., Docker, Git, CI/CD), cloud platforms (AWS, GCP, Azure), operating systems, and software mentioned.
-      *   **Inferred Skills:** Based on project descriptions, achievements, and work experience, infer the skills that are demonstrated but not explicitly listed. For example, if a project involved "building a scalable REST API," you should infer skills like "API Design," "HTTP," and potentially specific backend technologies if mentioned elsewhere. If the text mentions "Pandas" or "NumPy", you MUST infer "Python".
-      *   **Soft Skills:** Interpersonal and professional abilities like Teamwork, Communication, Problem-Solving, Leadership, and Time Management.
-  2.  Return a single, flat array of all identified skills in the \`skills\` field.
-  3.  **IMPORTANT:** If the resume text is empty or you cannot find any skills, you MUST return an empty array for the 'skills' field (e.g., \`{"skills": []}\`). Do not return null or an error.
+  Your analysis MUST proceed in the following order:
+
+  1.  **Identify Explicit Technical Skills:** This is your primary task. Find all programming languages, frameworks, libraries, databases, tools (e.g., Docker, Git, CI/CD), cloud platforms (AWS, GCP, Azure), operating systems, and software that are *explicitly written* in the text.
+
+  2.  **Identify Inferred Skills:** After you have a list of explicit skills, analyze project descriptions, achievements, and work experience to infer skills that are demonstrated but not explicitly listed.
+      *   **Example:** If a project involved "building a scalable REST API," you should infer skills like "API Design," and "HTTP".
+      *   **CRITICAL Example:** If the text mentions libraries like "Pandas," "NumPy," or "Scikit-learn", you MUST infer and include the parent language, "Python".
+
+  3.  **Identify Soft Skills:** Find interpersonal and professional abilities like Teamwork, Communication, Problem-Solving, Leadership, and Time Management.
+
+  4.  **Final Output:** Return a single, flat array of all identified skills in the \`skills\` field.
+
+  **IMPORTANT:** If the resume text is empty or you cannot find any skills, you MUST return an empty array for the 'skills' field (e.g., \`{"skills": []}\`). Do not return null or an error.
 
   **Resume Text to Analyze:**
   {{{resumeText}}}`,

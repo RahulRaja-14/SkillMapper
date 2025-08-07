@@ -367,16 +367,6 @@ export default function SkillMapperPage() {
                       Analyze Another
                     </Button>
                   </div>
-                  {analysisResult.resumeText && (
-                    <div className="space-y-2 pt-4">
-                      <h4 className="font-semibold text-center">Temporary Debug: Extracted Resume Text</h4>
-                       <Textarea
-                         className="h-96 text-xs bg-muted/50"
-                         disabled
-                         value={analysisResult.resumeText}
-                       />
-                    </div>
-                  )}
                 </div>
               )}
             </div>
