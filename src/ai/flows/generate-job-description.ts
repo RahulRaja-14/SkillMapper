@@ -1,28 +1,25 @@
-
 'use server';
 
 /**
- * @fileOverview Generates a detailed job description based on a role and experience level.
+ * @fileOverview This file defines a Genkit flow for generating a job description based on a job role and experience level.
  *
- * - generateJobDescription - A function that handles the job description generation process.
+ * - generateJobDescription - A function that takes a job role and experience and returns a detailed job description.
  * - GenerateJobDescriptionInput - The input type for the generateJobDescription function.
  * - GenerateJobDescriptionOutput - The return type for the generateJobDescription function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-
-const gemini15flash = googleAI.model('gemini-1.5-flash');
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
 
 const GenerateJobDescriptionInputSchema = z.object({
-  role: z.string().describe('The job title or role (e.g., "Software Engineer").'),
-  experience: z.string().describe('The desired experience level (e.g., "Entry-level", "Mid-level", "Senior").'),
+  jobRole: z.string().describe('The job title or role, e.g., "Senior Software Engineer".'),
+  experienceLevel: z.enum(['entry', 'mid', 'senior']).describe('The required experience level.'),
+  yearsOfExperience: z.number().optional().describe('The number of years of experience required for experienced roles.'),
 });
 export type GenerateJobDescriptionInput = z.infer<typeof GenerateJobDescriptionInputSchema>;
 
 const GenerateJobDescriptionOutputSchema = z.object({
-  jobDescription: z.string().describe('The generated job description, fully formatted.'),
+  jobDescription: z.string().describe('A comprehensive job description including responsibilities, qualifications, and preferred skills.'),
 });
 export type GenerateJobDescriptionOutput = z.infer<typeof GenerateJobDescriptionOutputSchema>;
 
@@ -31,24 +28,23 @@ export async function generateJobDescription(input: GenerateJobDescriptionInput)
 }
 
 const prompt = ai.definePrompt({
-  name: 'generateJobDescriptionPrompt',
-  input: {schema: GenerateJobDescriptionInputSchema},
-  output: {schema: GenerateJobDescriptionOutputSchema},
-  model: gemini15flash,
-  prompt: `
-Generate a complete and professional job description for a **{{role}}** with **{{experience}}** of experience.
+    name: 'generateJobDescriptionPrompt',
+    input: { schema: GenerateJobDescriptionInputSchema },
+    output: { schema: GenerateJobDescriptionOutputSchema },
+    prompt: `You are an expert HR manager who writes compelling job descriptions. Generate a comprehensive and professional job description based on the following details.
 
-The final output should be a single block of text.
+Job Role: {{{jobRole}}}
+Experience Level: {{{experienceLevel}}}
+{{#if yearsOfExperience}}
+Years of Experience: {{{yearsOfExperience}}}
+{{/if}}
 
-The job description MUST be for the specified **{{role}}**. Do NOT use any other job role.
-
-The description must include the following sections, formatted clearly:
-- Job Title: {{role}} ({{experience}})
-- Role Summary
-- Key Responsibilities
-- Required Skills (this section should focus on technical skills, not soft skills)
-- Preferred Qualifications
-`,
+Provide a detailed job description that includes:
+- **Job Summary**: A brief overview of the role.
+- **Responsibilities**: A bulleted list of key duties.
+- **Qualifications**: A bulleted list of required skills, experience, and education.
+- **Preferred Skills**: A bulleted list of desirable but not essential skills.
+- **Company Culture**: A brief note on the work environment.`,
 });
 
 
@@ -56,15 +52,10 @@ const generateJobDescriptionFlow = ai.defineFlow(
   {
     name: 'generateJobDescriptionFlow',
     inputSchema: GenerateJobDescriptionInputSchema,
-    outputSchema: GenerateJobDescriptionOutputSchema, 
+    outputSchema: GenerateJobDescriptionOutputSchema,
   },
   async (input) => {
     const { output } = await prompt(input);
-
-    if (!output) {
-      throw new Error("Failed to generate job description components from AI.");
-    }
-
-    return output;
+    return output!;
   }
 );

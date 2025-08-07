@@ -19,10 +19,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { extractJobSkills } from "@/ai/flows/extract-job-skills";
-import { extractResumeSkills } from "@/ai/flows/extract-resume-skills";
 import { suggestResources, type SuggestResourcesOutput } from "@/ai/flows/suggest-resources";
 import { generateJobDescription } from "@/ai/flows/generate-job-description";
+import { skillMatcher } from "@/ai/flows/skill-matcher";
 import { SkillReport } from "@/components/skill-report";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,12 +52,12 @@ export type AnalysisResult = {
   resourceSuggestions: SuggestResourcesOutput["suggestions"];
 };
 
-const fileToDataUri = (file: File): Promise<string> => {
+const fileToText = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.readAsText(file);
   });
 };
 
@@ -138,33 +137,12 @@ export default function SkillMapperPage() {
     setAnalysisResult(null);
 
     try {
-      const resumeDataUri = await fileToDataUri(values.resumeFile);
+      const resumeText = await fileToText(values.resumeFile);
 
-      const [resumeResult, jobResult] = await Promise.all([
-        extractResumeSkills({ resumeDataUri }),
-        extractJobSkills({ jobDescription: values.jobDescription }),
-      ]);
-      
-      if (!resumeResult) {
-        toast({
-          variant: "destructive",
-          title: "Resume Analysis Failed",
-          description: "Could not extract skills from the resume. Please check the file and try again.",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Explicitly get the skills from the user's resume
-      const userSkills = resumeResult.skills || [];
-      const resumeSkillsSet = new Set(userSkills.map(skill => skill.toLowerCase().trim()));
-
-      // Get the skills required by the job
-      const jobSkills = (jobResult.requiredSkills || []).map(skill => skill.trim());
-
-      // Compare the user's skills against the job's requirements
-      const matchedSkills = jobSkills.filter(skill => resumeSkillsSet.has(skill.toLowerCase()));
-      const missingSkills = jobSkills.filter(skill => !resumeSkillsSet.has(skill.toLowerCase()));
+      const { matchedSkills, missingSkills } = await skillMatcher({
+        jobDescription: values.jobDescription,
+        resume: resumeText,
+      });
 
       let resourceSuggestions: SuggestResourcesOutput["suggestions"] = [];
       if (missingSkills.length > 0) {
@@ -175,7 +153,7 @@ export default function SkillMapperPage() {
       setAnalysisResult({
         matchedSkills,
         missingSkills,
-        jobSkills,
+        jobSkills: [...matchedSkills, ...missingSkills],
         resourceSuggestions,
       });
 
