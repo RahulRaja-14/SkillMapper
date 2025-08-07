@@ -12,7 +12,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {extractJobSkills} from './extract-job-skills';
-import {extractResumeSkills} from './extract-resume-skills';
+import {extractResumeSkillsFromText} from './extract-resume-skills-from-text';
 
 const SkillMatcherInputSchema = z.object({
   jobDescription: z.string().describe('The full text of the job description.'),
@@ -47,9 +47,10 @@ async function extractTextFromPdf(resumeDataUri: string): Promise<string> {
 }
 
 function compareSkills(jobSkills: string[], resumeSkills: string[]): Omit<SkillMatcherOutput, 'resumeText'> {
+  // Create a unique, trimmed list of all job skills.
+  const allJobSkills = [...new Set(jobSkills.map(skill => skill.trim()))];
+  // Create a lowercase set of resume skills for efficient, case-insensitive lookup.
   const resumeSkillSet = new Set(resumeSkills.map(skill => skill.toLowerCase().trim()));
-
-  const allJobSkills = Array.from(new Set(jobSkills.map(s => s.trim())));
 
   const matchedSkills = allJobSkills.filter(skill => resumeSkillSet.has(skill.toLowerCase()));
   const missingSkills = allJobSkills.filter(skill => !resumeSkillSet.has(skill.toLowerCase()));
@@ -66,18 +67,22 @@ const skillMatcherFlow = ai.defineFlow(
   },
   async (input) => {
     
+    // Step 1: Extract text from the resume PDF. This is the single source of truth for the resume content.
     const resumeText = await extractTextFromPdf(input.resumeDataUri);
 
+    // Step 2: Concurrently extract skills from the job description and the now-extracted resume text.
     const [jobSkillsResult, resumeSkillsResult] = await Promise.all([
       extractJobSkills({ jobDescription: input.jobDescription }),
-      extractResumeSkills({ resumeDataUri: input.resumeDataUri }),
+      extractResumeSkillsFromText({ resumeText: resumeText }), // Use the new flow that takes text
     ]);
     
     const jobSkills = jobSkillsResult?.requiredSkills || [];
     const resumeSkills = resumeSkillsResult?.skills || [];
     
+    // Step 3: Compare the two lists of skills.
     const comparison = compareSkills(jobSkills, resumeSkills);
 
+    // Step 4: Return the final result, including the resume text for debugging.
     return {
       ...comparison,
       resumeText: resumeText,
