@@ -27,18 +27,18 @@ const SkillMatcherOutputSchema = z.object({
 });
 export type SkillMatcherOutput = z.infer<typeof SkillMatcherOutputSchema>;
 
-function compareSkills(jobSkills: ExtractJobSkillsOutput, resumeSkills: ExtractResumeSkillsOutput): SkillMatcherOutput {
-  // Ensure all comparisons are case-insensitive by converting all skills to lower case.
-  const jobSkillSet = new Set(jobSkills.requiredSkills.map(skill => skill.toLowerCase().trim()));
-  const resumeSkillSet = new Set(resumeSkills.skills.map(skill => skill.toLowerCase().trim()));
+function compareSkills(jobSkills: string[], resumeSkills: string[]): SkillMatcherOutput {
+  const jobSkillSet = new Set(jobSkills.map(skill => skill.toLowerCase().trim()));
+  const resumeSkillSet = new Set(resumeSkills.map(skill => skill.toLowerCase().trim()));
 
-  const allJobSkills = jobSkills.requiredSkills.map(s => s.trim());
+  const allJobSkills = Array.from(new Set(jobSkills.map(s => s.trim())));
 
   const matchedSkills = allJobSkills.filter(skill => resumeSkillSet.has(skill.toLowerCase()));
   const missingSkills = allJobSkills.filter(skill => !resumeSkillSet.has(skill.toLowerCase()));
 
   return { matchedSkills, missingSkills, allJobSkills };
 }
+
 
 const skillMatcherFlow = ai.defineFlow(
   {
@@ -53,8 +53,8 @@ const skillMatcherFlow = ai.defineFlow(
     ]);
 
     // Handle cases where skill extraction might return null or undefined outputs.
-    const jobSkills = jobSkillsResult || { requiredSkills: [] };
-    const resumeSkills = resumeSkillsResult || { skills: [] };
+    const jobSkills = jobSkillsResult?.requiredSkills || [];
+    const resumeSkills = resumeSkillsResult?.skills || [];
 
     return compareSkills(jobSkills, resumeSkills);
   }

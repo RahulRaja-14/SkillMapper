@@ -79,7 +79,7 @@ export function SkillReport({ result }: SkillReportProps) {
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
-              <AlertTriangle className="text-amber-500" />
+              <GraduationCap className="text-amber-500" />
               Top 5 Areas for Growth
             </CardTitle>
             <CardDescription>
