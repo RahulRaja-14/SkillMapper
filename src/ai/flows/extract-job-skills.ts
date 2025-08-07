@@ -47,7 +47,7 @@ const prompt = ai.definePrompt({
   Your final output must be a single, flat array of strings that combines all the identified skills from these three categories. Do not separate them into groups in the output.
 
   **Job Description to Analyze:**
-  {{jobDescription}}`,
+  {{{jobDescription}}}`,
 });
 
 const extractJobSkillsFlow = ai.defineFlow(
