@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -39,12 +40,12 @@ Experience Level: {{{experienceLevel}}}
 Years of Experience: {{{yearsOfExperience}}}
 {{/if}}
 
-Provide a detailed job description that includes:
-- **Job Summary**: A brief overview of the role.
-- **Responsibilities**: A bulleted list of key duties.
-- **Qualifications**: A bulleted list of required skills, experience, and education.
-- **Preferred Skills**: A bulleted list of desirable but not essential skills.
-- **Company Culture**: A brief note on the work environment.`,
+Provide a detailed job description that includes the following sections:
+- **Job Summary**: A brief, engaging overview of the role.
+- **Responsibilities**: A bulleted list of key duties and day-to-day tasks.
+- **Qualifications**: A bulleted list of required skills, educational background, and mandatory experience.
+- **Preferred Skills**: A bulleted list of desirable but not essential skills or qualifications.
+- **Company Culture**: A brief paragraph describing the work environment (e.g., collaborative, fast-paced, remote-friendly).`,
 });
 
 
