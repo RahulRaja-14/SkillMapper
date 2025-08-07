@@ -11,8 +11,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {extractJobSkills, type ExtractJobSkillsOutput} from './extract-job-skills';
-import {extractResumeSkills, type ExtractResumeSkillsOutput} from './extract-resume-skills';
+import {extractJobSkills} from './extract-job-skills';
+import {extractResumeSkills} from './extract-resume-skills';
 
 const SkillMatcherInputSchema = z.object({
   jobDescription: z.string().describe('The full text of the job description.'),
