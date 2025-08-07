@@ -27,7 +27,7 @@ const ExtractResumeSkillsOutputSchema = z.object({
 });
 export type ExtractResumeSkillsOutput = z.infer<typeof ExtractResumeSkillsOutputSchema>;
 
-export async function extractResumeSkills(input: ExtractResumeSkillsInput): Promise<ExtractResumeSkillsOutput> {
+export async function extractResumeSkills(input: ExtractResumeSkillsInput): Promise<ExtractResumeSkillsOutput | null> {
   return extractResumeSkillsFlow(input);
 }
 
@@ -74,7 +74,7 @@ const extractResumeSkillsFlow = ai.defineFlow(
   {
     name: 'extractResumeSkillsFlow',
     inputSchema: ExtractResumeSkillsInputSchema,
-    outputSchema: ExtractResumeSkillsOutputSchema,
+    outputSchema: z.nullable(ExtractResumeSkillsOutputSchema),
   },
   async (input) => {
     // Step 1: Directly extract text from the PDF.
