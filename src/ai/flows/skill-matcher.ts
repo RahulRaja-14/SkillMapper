@@ -1,8 +1,7 @@
-
 'use server';
 
 /**
- * @fileOverview Analyzes a resume against a job description to identify skill gaps.
+ * @fileOverview Analyzes a resume against a job description to identify skill gaps and provide a match score.
  *
  * - skillMatcher - A function that orchestrates the skill analysis process.
  * - SkillMatcherInput - The input type for the skillMatcher function.
@@ -24,7 +23,7 @@ const SkillMatcherOutputSchema = z.object({
   matchedSkills: z.array(z.string()).describe('A list of skills that are present in both the resume and the job description.'),
   missingSkills: z.array(z.string()).describe('A list of skills that are required for the job but not found in the resume.'),
   allJobSkills: z.array(z.string()).describe('A list of all skills required for the job.'),
-  resumeText: z.string().describe('The extracted text from the resume for debugging.'),
+  score: z.number().describe('The percentage of job skills found in the resume, from 0 to 100.'),
 });
 export type SkillMatcherOutput = z.infer<typeof SkillMatcherOutputSchema>;
 
@@ -46,17 +45,28 @@ async function extractTextFromPdf(resumeDataUri: string): Promise<string> {
   }
 }
 
-function compareSkills(jobSkills: string[], resumeSkills: string[]): Omit<SkillMatcherOutput, 'resumeText'> {
-  // Create a unique, trimmed list of all job skills.
-  const allJobSkills = [...new Set(jobSkills.map(skill => skill.trim()))];
-  // Create a lowercase set of resume skills for efficient, case-insensitive lookup.
-  const resumeSkillSet = new Set(resumeSkills.map(skill => skill.toLowerCase().trim()));
-
-  const matchedSkills = allJobSkills.filter(skill => resumeSkillSet.has(skill.toLowerCase()));
-  const missingSkills = allJobSkills.filter(skill => !resumeSkillSet.has(skill.toLowerCase()));
-
-  return { matchedSkills, missingSkills, allJobSkills };
-}
+function compareSkills(jobSkills: string[], resumeSkills: string[]): Omit<SkillMatcherOutput, 'score'> {
+    // Create a unique, case-insensitive set of skills from the resume for efficient lookup.
+    const resumeSkillSet = new Set(resumeSkills.map(skill => skill.trim().toLowerCase()));
+  
+    // Create a unique list of job skills to handle potential duplicates from the AI.
+    const allJobSkills = [...new Set(jobSkills.map(skill => skill.trim()))];
+  
+    const matchedSkills: string[] = [];
+    const missingSkills: string[] = [];
+  
+    // Iterate over the unique job skills and check for matches.
+    allJobSkills.forEach(jobSkill => {
+      // Perform a case-insensitive check.
+      if (resumeSkillSet.has(jobSkill.toLowerCase())) {
+        matchedSkills.push(jobSkill);
+      } else {
+        missingSkills.push(jobSkill);
+      }
+    });
+  
+    return { matchedSkills, missingSkills, allJobSkills };
+  }
 
 
 const skillMatcherFlow = ai.defineFlow(
@@ -73,19 +83,24 @@ const skillMatcherFlow = ai.defineFlow(
     // Step 2: Concurrently extract skills from the job description and the now-extracted resume text.
     const [jobSkillsResult, resumeSkillsResult] = await Promise.all([
       extractJobSkills({ jobDescription: input.jobDescription }),
-      extractResumeSkillsFromText({ resumeText: resumeText }), // Use the new flow that takes text
+      extractResumeSkillsFromText({ resumeText: resumeText }),
     ]);
     
     const jobSkills = jobSkillsResult?.requiredSkills || [];
     const resumeSkills = resumeSkillsResult?.skills || [];
     
-    // Step 3: Compare the two lists of skills.
+    // Step 3: Compare the two lists of skills using the robust, case-insensitive comparison function.
     const comparison = compareSkills(jobSkills, resumeSkills);
 
-    // Step 4: Return the final result, including the resume text for debugging.
+    // Step 4: Calculate the match score as a percentage.
+    const score = comparison.allJobSkills.length > 0
+      ? Math.round((comparison.matchedSkills.length / comparison.allJobSkills.length) * 100)
+      : 100; // If there are no job skills, score is 100%.
+
+    // Step 5: Return the final result.
     return {
       ...comparison,
-      resumeText: resumeText,
+      score,
     };
   }
 );

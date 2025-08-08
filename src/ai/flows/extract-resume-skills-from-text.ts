@@ -43,6 +43,7 @@ const prompt = ai.definePrompt({
   2.  **Identify Inferred Skills:** After you have a list of explicit skills, analyze project descriptions, achievements, and work experience to infer skills that are demonstrated but not explicitly listed.
       *   **Example:** If a project involved "building a scalable REST API," you should infer skills like "API Design," and "HTTP".
       *   **CRITICAL Example:** If the text mentions libraries like "Pandas," "NumPy," or "Scikit-learn", you MUST infer and include the parent language, "Python".
+      *   **From Code Snippets:** If you see a block of code, you MUST identify the programming language it's written in (e.g., Python, JavaScript, Java) and add it to the skills list.
 
   3.  **Identify Soft Skills:** Find interpersonal and professional abilities like Teamwork, Communication, Problem-Solving, Leadership, and Time Management.
 

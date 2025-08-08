@@ -52,7 +52,6 @@ export type AnalysisResult = {
   missingSkills: string[];
   jobSkills: string[];
   resourceSuggestions: SuggestResourcesOutput["suggestions"];
-  resumeText?: string;
 };
 
 const fileToDataUri = (file: File): Promise<string> => {
@@ -139,14 +138,13 @@ export default function SkillMapperPage() {
     try {
       const resumeDataUri = await fileToDataUri(values.resumeFile);
 
-      const { matchedSkills, missingSkills, allJobSkills, resumeText } = await skillMatcher({
+      const { matchedSkills, missingSkills, allJobSkills } = await skillMatcher({
         jobDescription: values.jobDescription,
         resumeDataUri: resumeDataUri,
       });
 
       let resourceSuggestions: SuggestResourcesOutput["suggestions"] = [];
       if (missingSkills.length > 0) {
-        // We only fetch suggestions for the skills that are actually missing.
         const resources = await suggestResources({ missingSkills });
         resourceSuggestions = resources.suggestions;
       }
@@ -156,7 +154,6 @@ export default function SkillMapperPage() {
         missingSkills,
         jobSkills: allJobSkills,
         resourceSuggestions,
-        resumeText,
       });
 
     } catch (error) {
