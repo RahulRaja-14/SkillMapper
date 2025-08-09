@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -22,7 +23,7 @@ const SuggestResourcesOutputSchema = z.object({
   suggestions: z.array(
     z.object({
       skill: z.string().describe('The skill the suggestion is for.'),
-      websites: z.array(z.string().url()).describe('A list of suggested website URLs for learning the skill.'),
+      websites: z.array(z.string()).describe('A list of suggested website URLs for learning the skill.'),
       youtubeChannels: z
         .array(z.string())
         .describe('Suggested YouTube channels for learning the skill.'),
