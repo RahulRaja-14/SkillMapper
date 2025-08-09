@@ -23,7 +23,7 @@ import { suggestResources, type SuggestResourcesOutput } from "@/ai/flows/sugges
 import { generateJobDescription } from "@/ai/flows/generate-job-description";
 import { skillMatcher } from "@/ai/flows/skill-matcher";
 import { SkillReport } from "@/components/skill-report";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -54,15 +54,6 @@ export type AnalysisResult = {
   resourceSuggestions: SuggestResourcesOutput["suggestions"];
 };
 
-const fileToDataUri = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
-
 export default function SkillMapperPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -71,6 +62,7 @@ export default function SkillMapperPage() {
   const [experienceType, setExperienceType] = useState<"entry" | "mid" | "senior">("entry");
   const [experienceYears, setExperienceYears] = useState<number | "">("");
   const [activeTab, setActiveTab] = useState("paste");
+  const [resumeText, setResumeText] = useState("");
 
 
   const { toast } = useToast();
@@ -83,6 +75,41 @@ export default function SkillMapperPage() {
   });
 
   const resumeFileRef = form.register("resumeFile");
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      form.setValue("resumeFile", file);
+      setIsLoading(true);
+      try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const buffer = e.target?.result;
+          if (buffer) {
+            const pdfjs = await import('pdfjs-dist');
+            pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+            const doc = await pdfjs.getDocument({ data: buffer as ArrayBuffer }).promise;
+            let text = "";
+            for (let i = 1; i <= doc.numPages; i++) {
+              const page = await doc.getPage(i);
+              const content = await page.getTextContent();
+              text += content.items.map((item: any) => item.str).join(" ");
+            }
+            setResumeText(text);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error reading PDF",
+          description: "There was a problem extracting text from your resume. Please try another file.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
   
   async function handleGenerateDescription(e: React.MouseEvent) {
     e.preventDefault();
@@ -132,15 +159,21 @@ export default function SkillMapperPage() {
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!resumeText) {
+      toast({
+        variant: "destructive",
+        title: "Missing Resume Text",
+        description: "Could not read text from the resume. Please try uploading it again.",
+      });
+      return;
+    }
     setIsLoading(true);
     setAnalysisResult(null);
 
     try {
-      const resumeDataUri = await fileToDataUri(values.resumeFile);
-
       const { matchedSkills, missingSkills, allJobSkills } = await skillMatcher({
         jobDescription: values.jobDescription,
-        resumeDataUri: resumeDataUri,
+        resumeText: resumeText,
       });
 
       let resourceSuggestions: SuggestResourcesOutput["suggestions"] = [];
@@ -208,7 +241,7 @@ export default function SkillMapperPage() {
                                     className="hidden"
                                     id="resume-upload"
                                     {...resumeFileRef}
-                                    onChange={(e) => field.onChange(e.target.files?.[0])}
+                                    onChange={handleFileChange}
                                   />
                                   <label htmlFor="resume-upload" className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted/50 transition-colors">
                                     {selectedFile ? (

@@ -47,6 +47,7 @@
     "next": "15.3.3",
     "patch-package": "^8.0.0",
     "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^5.4.54",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
@@ -59,6 +60,7 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.4",
+    "@types/pdfjs-dist": "^2.10.377",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "genkit-cli": "^1.13.0",

@@ -22,7 +22,7 @@ const SuggestResourcesOutputSchema = z.object({
   suggestions: z.array(
     z.object({
       skill: z.string().describe('The skill the suggestion is for.'),
-      websites: z.array(z.string()).describe('Suggested websites for learning the skill.'),
+      websites: z.array(z.string().url()).describe('A list of suggested website URLs for learning the skill.'),
       youtubeChannels: z
         .array(z.string())
         .describe('Suggested YouTube channels for learning the skill.'),
@@ -41,8 +41,7 @@ const prompt = ai.definePrompt({
   output: {schema: SuggestResourcesOutputSchema},
   prompt: `You are an AI assistant that suggests websites and YouTube channels for learning specific skills.
 
-  For each of the following skills, suggest one or more relevant websites and YouTube channels.
-  The suggestions should be tailored to the specific skill and provide resources that are helpful for learning it.
+  For each of the following skills, suggest one or two relevant, high-quality websites and one or two popular YouTube channels. Provide full URLs for websites (e.g., https://www.example.com).
 
   Skills:
   {{#each missingSkills}}- {{this}}\n{{/each}}`,
@@ -55,6 +54,9 @@ const suggestResourcesFlow = ai.defineFlow(
     outputSchema: SuggestResourcesOutputSchema,
   },
   async input => {
+    if (!input.missingSkills || input.missingSkills.length === 0) {
+      return { suggestions: [] };
+    }
     const {output} = await prompt(input);
     return output!;
   }
